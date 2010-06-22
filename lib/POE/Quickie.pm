@@ -41,11 +41,22 @@ sub run {
     my ($self, %args) = @_;
 
     croak 'Program parameter not supplied' if !defined $args{Program};
+
+    if ($args{Copy_inc} && ref $args{Program} ne 'SCALAR') {
+        croak 'Program must be a string when Copy_inc is enabled';
+    }
+
     return $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
 }
 
 sub _create_wheel {
     my ($kernel, $self, $args) = @_[KERNEL, OBJECT, ARG0];
+
+    my $program = $args->{Program};
+    if ($args->{Copy_inc}) {
+        my @inc = map { +'-I' => $_ } @INC;
+        $program = [$^X, @inc, '-e', $program],
+    }
 
     my $wheel;
     eval {
@@ -53,7 +64,7 @@ sub _create_wheel {
             CloseEvent  => '_child_closed',
             StdoutEvent => '_child_stdout',
             StderrEvent => '_child_stderr',
-            Program     => $args->{Program},
+            Program     => $program,
             (defined $args->{ProgramArgs}
                 ? (ProgramArgs => $args->{ProgramArgs})
                 : ()
@@ -236,17 +247,21 @@ its documentation for details.
 This method starts a new program. It returns the id of the newly created
 L<POE::Wheel::Run|POE::Wheel::Run>. It takes the following arguments:
 
-B<'Program'> (required), which will be passed to POE::Wheel::Run's
-constructor.
+B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
-B<'Program_args'> (optional), same as above.
+B<'Copy_inc'> (optional), if enabled, a new instance of the active Perl
+interpreter (C<$^X>) will be launched with B<'Program'> (which must be a
+string) as the code (I<-e>) argument, and the current C<@INC> passed as
+include (I<-I>) arguments.
 
-B<'Timeout'> (optional), a timeout in seconds after which the program will
-be forcibly killed if it is still running.
+B<'Program_args'> (optional), same as the epynomous parameter to POE::Wheel::Run.
 
 B<'StdoutEvent'> (optional), same as the epynomous parameter to POE::Wheel::Run.
 
 B<'StderrEvent'> (optional), same as the epynomous parameter to POE::Wheel::Run.
+
+B<'Timeout'> (optional), a timeout in seconds after which the program will
+be forcibly killed if it is still running.
 
 =head2 C<shutdown>
 
@@ -255,9 +270,6 @@ This shuts down the POE::Quickie instance. Any running jobs will be killed.
 =head1 TODO
 
 =over 4
-
-=item * Add run_program() which is takes a string of Perl code and runs it,
-with the same @INC as your program
 
 =item * Add context hashref parameter to run() which will be returned with
 every event
