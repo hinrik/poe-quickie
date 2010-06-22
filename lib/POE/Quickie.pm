@@ -60,7 +60,7 @@ sub _create_wheel {
             ),
             (ref $args->{Program} eq 'CODE' && $^O eq 'Win32'
                 ? (CloseOnCall => 1)
-            : ()
+                : ()
             ),
         );
     };
