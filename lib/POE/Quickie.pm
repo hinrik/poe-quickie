@@ -233,10 +233,11 @@ its documentation for details.
 
 =head3 C<run>
 
-This method starts a new program. It takes the following parameters
+This method starts a new program. It returns the id of the newly created
+L<POE::Wheel::Run|POE::Wheel::Run>. It takes the following arguments:
 
-B<'Program'> (required), which will be passed to
-L<POE::Wheel::Run|POE::Wheel::Run>'s constructor.
+B<'Program'> (required), which will be passed to POE::Wheel::Run's
+constructor.
 
 B<'Program_args'> (optional), same as above.
 
