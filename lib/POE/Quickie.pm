@@ -248,6 +248,10 @@ B<'StdoutEvent'> (optional), same as the epynomous parameter to POE::Wheel::Run.
 
 B<'StderrEvent'> (optional), same as the epynomous parameter to POE::Wheel::Run.
 
+=head2 C<shutdown>
+
+This shuts down the POE::Quickie instance. Any running jobs will be killed.
+
 =head1 AUTHOR
 
 Hinrik E<Ouml>rn SigurE<eth>sson, hinrik.sig@gmail.com
