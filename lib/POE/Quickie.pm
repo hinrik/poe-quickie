@@ -284,7 +284,7 @@ interpreter (C<$^X>) will be launched with B<'Program'> (which must be a
 string) as the code (I<-e>) argument, and the current C<@INC> passed as
 include (I<-I>) arguments. Default is false.
 
-B<'Program_args'> (optional), same as the epynomous parameter to
+B<'ProgramArgs'> (optional), same as the epynomous parameter to
 POE::Wheel::Run.
 
 B<'StdoutEvent'> (optional), the event for delivering lines from the
