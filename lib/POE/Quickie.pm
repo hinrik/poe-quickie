@@ -256,6 +256,9 @@ This shuts down the POE::Quickie instance. Any running jobs will be killed.
 
 =over 4
 
+=item * Add run_program() which is takes a string of Perl code and runs it,
+with the same @INC as your program
+
 =item * Add context hashref parameter to run() which will be returned with
 every event
 
