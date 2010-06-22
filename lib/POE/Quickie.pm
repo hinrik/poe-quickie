@@ -230,6 +230,8 @@ sub _shutdown {
 
 1;
 
+=encoding utf8
+
 =head1 NAME
 
 POE::Quickie - A lazy way to wrap blocking programs
