@@ -1,0 +1,6 @@
+^Makefile$
+\.old$
+^POE-Quickie-
+^blib/
+^pm_to_blib$
+^cover_db/
