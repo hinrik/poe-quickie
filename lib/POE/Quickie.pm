@@ -197,7 +197,7 @@ sub _shutdown {
 
 =head1 NAME
 
-POE::Quickie - A lazy way to execute programs
+POE::Quickie - A lazy way to wrap blocking programs
 
 =head1 SYNOPSIS
 
