@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use POE;
 use POE::Quickie;
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 POE::Session->create(
     package_states => [
@@ -12,7 +12,6 @@ POE::Session->create(
             stderr
         )],
     ],
-    options => { trace => 0 },
 );
 
 POE::Kernel->run;
@@ -20,16 +19,18 @@ POE::Kernel->run;
 sub _start {
     my $heap = $_[HEAP];
 
-    $heap->{quickie} = POE::Quickie->new(trace => 0);
+    $heap->{quickie} = POE::Quickie->new();
     $heap->{quickie}->run(
         Program     => sub { print "foo\n" },
         StdoutEvent => 'stdout',
+        Context     => 'baz',
     );
 }
 
 sub stdout {
-    my ($heap, $output) = @_[HEAP, ARG0];
+    my ($heap, $output, $context) = @_[HEAP, ARG0, ARG2];
     is($output, 'foo', 'Got stdout');
+    is($context, 'baz', 'Got context');
     
     $heap->{quickie}->run(
         Program     => sub { warn "bar\n" },

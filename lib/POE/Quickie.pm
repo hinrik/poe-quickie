@@ -119,7 +119,17 @@ sub _child_signal {
     my $id = $self->_pid_to_id($pid);
 
     my $event = $self->{wheels}{$id}{args}{ExitEvent};
-    $kernel->post($self->{parent_id}, $event, $status) if defined $event;
+    my $context = $self->{wheels}{$id}{args}{Context};
+
+    if (defined $event) {
+        $kernel->post(
+            $self->{parent_id},
+            $event,
+            $status,
+            $id,
+            (defined $context ? $context : ()),
+        );
+    }
     $kernel->yield('_delete_wheel', $id);
     return;
 }
@@ -143,7 +153,14 @@ sub _child_stdout {
         print "$output\n";
     }
     elsif (defined (my $event = $self->{wheels}{$id}{args}{StdoutEvent})) {
-        $kernel->post($self->{parent_id}, $event, $output, $id);
+        my $context = $self->{wheels}{$id}{args}{Context};
+        $kernel->post(
+            $self->{parent_id},
+            $event,
+            $output,
+            $id,
+            (defined $context ? $context : ()),
+        );
     }
 
     return;
@@ -156,7 +173,14 @@ sub _child_stderr {
         warn "$error\n";
     }
     elsif (defined (my $event = $self->{wheels}{$id}{args}{StderrEvent})) {
-        $kernel->post($self->{parent_id}, $event, $error, $id);
+        my $context = $self->{wheels}{$id}{args}{Context};
+        $kernel->post(
+            $self->{parent_id},
+            $event,
+            $error,
+            $id,
+            $self->{wheels}{$id}{args}{ExitEvent},
+        );
     }
 
     return;
@@ -260,21 +284,14 @@ B<'StdoutEvent'> (optional), same as the epynomous parameter to POE::Wheel::Run.
 
 B<'StderrEvent'> (optional), same as the epynomous parameter to POE::Wheel::Run.
 
+B<'ExitEvent'> (optional, the event to be called when the program has exited.
+
 B<'Timeout'> (optional), a timeout in seconds after which the program will
 be forcibly killed if it is still running.
 
 =head2 C<shutdown>
 
 This shuts down the POE::Quickie instance. Any running jobs will be killed.
-
-=head1 TODO
-
-=over 4
-
-=item * Add context hashref parameter to run() which will be returned with
-every event
-
-=back
 
 =head1 AUTHOR
 
