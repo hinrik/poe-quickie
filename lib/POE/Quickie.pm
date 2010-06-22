@@ -89,7 +89,7 @@ sub _start {
 
     my $session_id = $session->ID;
     $self->{session_id} = $session_id;
-    $kernel->sig(DIE => 'exception');
+    $kernel->sig(DIE => '_exception');
     $kernel->refcount_increment($session_id, __PACKAGE__);
     return;
 }
