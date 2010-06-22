@@ -252,6 +252,15 @@ B<'StderrEvent'> (optional), same as the epynomous parameter to POE::Wheel::Run.
 
 This shuts down the POE::Quickie instance. Any running jobs will be killed.
 
+=head1 TODO
+
+=over 4
+
+=item * Add context hashref parameter to run() which will be returned with
+every event
+
+=back
+
 =head1 AUTHOR
 
 Hinrik E<Ouml>rn SigurE<eth>sson, hinrik.sig@gmail.com
