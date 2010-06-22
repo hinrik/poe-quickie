@@ -77,7 +77,7 @@ sub create_wheel {
 
     if (defined $args->{Timeout}) {
         $self->{wheels}{$wheel->ID}{alrm}
-            = $kernel->delay_set('child_timeout', $args->{timeout}, $wheel->ID);
+            = $kernel->delay_set('child_timeout', $args->{Timeout}, $wheel->ID);
     }
     $kernel->sig_child($wheel->PID, 'child_signal');
 
@@ -121,7 +121,7 @@ sub child_closed {
 
 sub child_timeout {
     my ($self, $id) = @_[OBJECT, ARG0];
-    $self->{wheels}{$id}->kill();
+    $self->{wheels}{$id}{obj}->kill();
     return;
 }
 
