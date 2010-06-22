@@ -22,23 +22,23 @@ sub _start {
 
     $heap->{quickie} = POE::Quickie->new(trace => 0);
     $heap->{quickie}->run(
-        Program     => ['ls', 'dist.ini'],
+        Program     => sub { print "foo\n" },
         StdoutEvent => 'stdout',
     );
 }
 
 sub stdout {
     my ($heap, $output) = @_[HEAP, ARG0];
-    is($output, 'dist.ini', 'Got stdout');
+    is($output, 'foo', 'Got stdout');
     
     $heap->{quickie}->run(
-        Program     => ['ls', 'dsfigjewgj0je3'],
+        Program     => sub { warn "bar\n" },
         StderrEvent => 'stderr',
     );
 }
 
 sub stderr {
-    my $heap = $_[HEAP];
-    pass('Got stderr');
+    my ($heap, $error) = @_[HEAP, ARG0];
+    is($error, 'bar', 'Got stderr');
     $heap->{quickie}->shutdown();
 }

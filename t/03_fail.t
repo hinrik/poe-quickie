@@ -21,7 +21,7 @@ sub _start {
 
     $heap->{quickie} = POE::Quickie->new(trace => 0);
     $heap->{quickie}->run(
-        Program   => ['dsfoij3fj3foij'],
+        Program   => sub { die },
         ExitEvent => 'exit',
     );
 }
