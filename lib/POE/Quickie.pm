@@ -16,14 +16,14 @@ sub new {
         object_states => [
             $self => [qw(
                 _start
-                exception
-                create_wheel
-                delete_wheel
-                child_signal
-                child_closed
-                child_timeout
-                child_stdout
-                child_stderr
+                _exception
+                _create_wheel
+                _delete_wheel
+                _child_signal
+                _child_closed
+                _child_timeout
+                _child_stdout
+                _child_stderr
                 _shutdown
             )],
         ],
@@ -41,18 +41,18 @@ sub run {
     my ($self, %args) = @_;
 
     croak 'Program parameter not supplied' if !defined $args{Program};
-    return $poe_kernel->call($self->{session_id}, 'create_wheel', \%args);
+    return $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
 }
 
-sub create_wheel {
+sub _create_wheel {
     my ($kernel, $self, $args) = @_[KERNEL, OBJECT, ARG0];
 
     my $wheel;
     eval {
         $wheel = POE::Wheel::Run->new(
-            CloseEvent  => 'child_closed',
-            StdoutEvent => 'child_stdout',
-            StderrEvent => 'child_stderr',
+            CloseEvent  => '_child_closed',
+            StdoutEvent => '_child_stdout',
+            StderrEvent => '_child_stderr',
             Program     => $args->{Program},
             (defined $args->{ProgramArgs}
                 ? (ProgramArgs => $args->{ProgramArgs})
@@ -77,9 +77,9 @@ sub create_wheel {
 
     if (defined $args->{Timeout}) {
         $self->{wheels}{$wheel->ID}{alrm}
-            = $kernel->delay_set('child_timeout', $args->{Timeout}, $wheel->ID);
+            = $kernel->delay_set('_child_timeout', $args->{Timeout}, $wheel->ID);
     }
-    $kernel->sig_child($wheel->PID, 'child_signal');
+    $kernel->sig_child($wheel->PID, '_child_signal');
 
     return $wheel->ID;
 }
@@ -94,7 +94,7 @@ sub _start {
     return;
 }
 
-sub exception {
+sub _exception {
     my ($kernel, $self, $ex) = @_[KERNEL, OBJECT, ARG1];
     chomp $ex->{error_str};
     warn "Event $ex->{event} in session "
@@ -103,29 +103,29 @@ sub exception {
     return;
 }
 
-sub child_signal {
+sub _child_signal {
     my ($kernel, $self, $pid, $status) = @_[KERNEL, OBJECT, ARG1, ARG2];
     my $id = $self->_pid_to_id($pid);
 
     my $event = $self->{wheels}{$id}{args}{ExitEvent};
     $kernel->post($self->{parent_id}, $event, $status) if defined $event;
-    $kernel->yield('delete_wheel', $id);
+    $kernel->yield('_delete_wheel', $id);
     return;
 }
 
-sub child_closed {
+sub _child_closed {
     my ($kernel, $self, $id) = @_[KERNEL, OBJECT, ARG0];
-    $kernel->yield('delete_wheel', $id);
+    $kernel->yield('_delete_wheel', $id);
     return;
 }
 
-sub child_timeout {
+sub _child_timeout {
     my ($self, $id) = @_[OBJECT, ARG0];
     $self->{wheels}{$id}{obj}->kill();
     return;
 }
 
-sub child_stdout {
+sub _child_stdout {
     my ($kernel, $self, $output, $id) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
     if (!exists $self->{wheels}{$id}{args}{StdoutEvent}) {
@@ -138,7 +138,7 @@ sub child_stdout {
     return;
 }
 
-sub child_stderr {
+sub _child_stderr {
     my ($kernel, $self, $error, $id) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
     if (!exists $self->{wheels}{$id}{args}{StderrEvent}) {
@@ -153,7 +153,7 @@ sub child_stderr {
 
 # only delete the wheel after both child_signal and child_closed
 # have called this
-sub delete_wheel {
+sub _delete_wheel {
     my ($kernel, $self, $id) = @_[KERNEL, OBJECT, ARG0];
 
     $self->{wheels}{$id}{alive}--;
