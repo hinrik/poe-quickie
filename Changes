@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Renamed CopyINC to AltFork (like POE::Component::Generic and other
+      modules call this feature) and made it croak if used on Win32
 
 0.01  Wed Jun 23 13:30:10 GMT 2010
     - Initial release

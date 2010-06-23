@@ -52,8 +52,12 @@ sub run {
 
     croak 'Program parameter not supplied' if !defined $args{Program};
 
-    if ($args{CopyINC} && ref $args{Program}) {
-        croak 'Program must be a string when CopyINC is enabled';
+    if ($args{AltFork} && ref $args{Program}) {
+        croak 'Program must be a string when AltFork is enabled';
+    }
+
+    if ($args{AltFork} && $^O eq 'Win32') {
+        croak 'AltFork does not currently work on Win32';
     }
 
     my ($exception, @return)
@@ -69,7 +73,7 @@ sub _create_wheel {
     my ($kernel, $self, $args) = @_[KERNEL, OBJECT, ARG0];
 
     my $program = $args->{Program};
-    if ($args->{CopyINC}) {
+    if ($args->{AltFork}) {
         my @inc = map { +'-I' => $_ } @INC;
         $program = [$^X, @inc, '-e', $program];
     }
@@ -310,7 +314,7 @@ executed program. It takes the following arguments:
 
 B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
-B<'CopyINC'> (optional), if true, a new instance of the active Perl
+B<'AltFork'> (optional), if true, a new instance of the active Perl
 interpreter (C<$^X>) will be launched with B<'Program'> (which must be a
 string) as the code (I<-e>) argument, and the current C<@INC> passed as
 include (I<-I>) arguments. Default is false.
