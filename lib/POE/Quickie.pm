@@ -42,7 +42,7 @@ sub run {
 
     croak 'Program parameter not supplied' if !defined $args{Program};
 
-    if ($args{Copy_inc} && ref $args{Program} ne 'SCALAR') {
+    if ($args{Copy_inc} && ref $args{Program}) {
         croak 'Program must be a string when Copy_inc is enabled';
     }
 
