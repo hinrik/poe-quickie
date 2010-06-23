@@ -344,7 +344,7 @@ is the process id, and the value is the context variable, if any.
 =head1 OUTPUT
 
 The following events might get sent to your session. The names correspond
-to the options to C<run|/run>.
+to the options to L<C<run>|/run>.
 
 =head2 StdoutEvent
 
