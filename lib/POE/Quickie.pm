@@ -122,10 +122,12 @@ sub _child_signal {
     my ($kernel, $self, $pid, $status) = @_[KERNEL, OBJECT, ARG1, ARG2];
     my $id = $self->_pid_to_id($pid);
 
-    my $event = $self->{wheels}{$id}{args}{ExitEvent};
-    my $context = $self->{wheels}{$id}{args}{Context};
-
-    if (defined $event) {
+    my $s = $status >> 8;
+    if ($s != 0 && !exists $self->{wheels}{$id}{args}{ExitEvent}) {
+        warn "Child $pid exited with status $s\n";
+    }
+    elsif (defined (my $event = $self->{wheels}{$id}{args}{ExitEvent})) {
+        my $context = $self->{wheels}{$id}{args}{Context};
         $kernel->post(
             $self->{parent_id},
             $event,
@@ -134,6 +136,7 @@ sub _child_signal {
             (defined $context ? $context : ()),
         );
     }
+
     $kernel->yield('_delete_wheel', $id);
     return;
 }
@@ -300,13 +303,15 @@ POE::Wheel::Run.
 
 B<'StdoutEvent'> (optional), the event for delivering lines from the
 program's STDOUT. If you don't supply this, they will be printed to the main
-program's STDOUT. To explicitly ignore it, set it to C<undef>.
+program's STDOUT. To explicitly ignore them, set this to C<undef>.
 
 B<'StderrEvent'> (optional), the event for delivering lines from the
 program's STDERR. If you don't supply this, they will be printed to the main
-program's STDERR. To explicitly ignore it, set it to C<undef>.
+program's STDERR. To explicitly ignore them, set this to C<undef>.
 
 B<'ExitEvent'> (optional, the event to be called when the program has exited.
+If you don't supply this, a warning will be printed if the exit status is
+nonzero. To explicitly ignore it, set this to C<undef>.
 
 B<'Timeout'> (optional), a timeout in seconds after which the program will
 be forcibly killed if it is still running.
