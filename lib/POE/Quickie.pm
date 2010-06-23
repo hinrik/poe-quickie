@@ -260,15 +260,19 @@ POE::Quickie - A lazy way to wrap blocking programs
  use POE::Quickie;
 
  sub handler {
-     my $quicky = POE::Quickie->new();
-     $quicky->run(
-         Program     => ['foo', 'bar'];
+     my $heap = $_[HEAP];
+
+     my $heap->{quickie} = POE::Quickie->new();
+     $heap->{quickie}->run(
+         Program     => ['foo', 'bar'],
          StdoutEvent => 'stdout',
+         Context     => 'remember this',
      );
  }
 
  sub stdout {
-     print "got output: $_[ARG0]\n";
+     my ($output, $context) = @_[ARG0, ARG1];
+     print "got output: '$output' in the context of '$context'\n";
  }
 
 =head1 DESCRIPTION
@@ -276,6 +280,9 @@ POE::Quickie - A lazy way to wrap blocking programs
 This module takes care of running external programs for you. It manages the
 wheels, reaps the child processes, and can kill programs after a specified
 timeout if you want.
+
+POE::Quickie can even manage multiple programs for you, as well as store
+context information for each one.
 
 =head1 METHODS
 
