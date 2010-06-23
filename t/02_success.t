@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use POE;
 use POE::Quickie;
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 POE::Session->create(
     package_states => [
@@ -37,11 +37,13 @@ sub stdout {
     $heap->{quickie}->run(
         Program     => sub { warn "bar\n" },
         StderrEvent => 'stderr',
+        Context     => 'quux',
     );
 }
 
 sub stderr {
-    my ($heap, $error) = @_[HEAP, ARG0];
+    my ($heap, $error, $context) = @_[HEAP, ARG0, ARG2];
     is($error, 'bar', 'Got stderr');
+    is($context, 'quux', 'Got context');
     $heap->{quickie}->shutdown();
 }

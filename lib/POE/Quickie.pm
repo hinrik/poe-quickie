@@ -183,7 +183,7 @@ sub _child_stderr {
             $event,
             $error,
             $id,
-            $self->{wheels}{$id}{args}{ExitEvent},
+            (defined $context ? $context : ()),
         );
     }
 
