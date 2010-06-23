@@ -56,7 +56,13 @@ sub run {
         croak 'Program must be a string when CopyINC is enabled';
     }
 
-    return $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
+    my ($exception, @return)
+        = $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
+
+    # propagate possible exception from POE::Wheel::Run->new()
+    croak $exception if $exception;
+
+    return @return;
 }
 
 sub _create_wheel {
@@ -92,8 +98,7 @@ sub _create_wheel {
 
     if ($@) {
         chomp $@;
-        warn $@, "\n";
-        return;
+        return $@;
     }
 
     $self->{wheels}{$wheel->ID}{obj} = $wheel;
@@ -106,7 +111,7 @@ sub _create_wheel {
     }
     $kernel->sig_child($wheel->PID, '_child_signal');
 
-    return $wheel->PID;
+    return undef, $wheel->PID;
 }
 
 sub _exception {
