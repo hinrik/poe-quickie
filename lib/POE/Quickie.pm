@@ -74,7 +74,7 @@ sub _create_wheel {
                 : ()
             ),
             (defined $args->{PWR_args}
-                ? (%{ $args->{PWR_args })
+                ? (%{ $args->{PWR_args} })
                 : ()
             ),
         );
