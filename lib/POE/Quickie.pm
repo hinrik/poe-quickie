@@ -130,22 +130,7 @@ sub _exception {
 sub _child_signal {
     my ($kernel, $self, $pid, $status) = @_[KERNEL, OBJECT, ARG1, ARG2];
     my $id = $self->_pid_to_id($pid);
-
-    my $s = $status >> 8;
-    if ($s != 0 && !exists $self->{wheels}{$id}{args}{ExitEvent}) {
-        warn "Child $pid exited with status $s\n";
-    }
-    elsif (defined (my $event = $self->{wheels}{$id}{args}{ExitEvent})) {
-        my $context = $self->{wheels}{$id}{args}{Context};
-        $kernel->post(
-            $self->{parent_id},
-            $event,
-            $status,
-            $pid,
-            (defined $context ? $context : ()),
-        );
-    }
-
+    $self->{wheels}{$id}{status} = $status;
     $kernel->yield('_delete_wheel', $id);
     return;
 }
@@ -212,6 +197,27 @@ sub _delete_wheel {
         $kernel->alarm_remove($self->{wheels}{$id}{alrm});
         delete $self->{wheels}{$id};
     }
+
+    my $status = $self->{wheels}{$id}{status};
+    my $s = $status >> 8;
+    if ($s != 0 && !exists $self->{wheels}{$id}{args}{ExitEvent}) {
+        warn "Child $pid exited with status $s\n";
+    }
+
+    if ($self->{wheels}{$id}{args}{Fatal}) {
+        # send an exception to the parent session somehow
+    }
+    elsif (defined (my $event = $self->{wheels}{$id}{args}{ExitEvent})) {
+        my $context = $self->{wheels}{$id}{args}{Context};
+        $kernel->post(
+            $self->{parent_id},
+            $event,
+            $status,
+            $pid,
+            (defined $context ? $context : ()),
+        );
+    }
+
     return;
 }
 
