@@ -2,7 +2,10 @@ use strict;
 use warnings;
 use POE;
 use POE::Quickie;
-use Test::More tests => 1;
+use Test::More;
+
+plan skip_all => 'This test needs POE >1.289' if $POE::VERSION le '1.289';
+plan tests => 1;
 
 POE::Session->create(
     package_states => [
