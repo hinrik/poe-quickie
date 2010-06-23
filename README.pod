@@ -11,9 +11,14 @@ POE::Quickie - A lazy way to wrap blocking programs
  sub handler {
      my $heap = $_[HEAP];
 
+     # the really lazy interface
+     my ($stdout, $stderr, $exit) = quickie('foo.pl');
+     print $output, "\n";
+
+     # the more involved interface
      my $heap->{quickie} = POE::Quickie->new();
      $heap->{quickie}->run(
-         Program     => ['foo', 'bar'],
+         Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
      );
@@ -37,6 +42,11 @@ It has some convenience features, such as killing processes after a timeout,
 and storing process-specific context information which will be delivered with
 every event.
 
+There is also an even lazier API which suspends the execution of your event
+handler and gives control back to POE while your task is running, the same
+way L<LWP::UserAgent::POE|LWP::UserAgent::POE> does. This is provided by the
+L<C<quickie_*>|/FUNCTIONS> functions which you can import.
+
 =head1 METHODS
 
 =head2 C<new>
@@ -50,7 +60,11 @@ its documentation for details.
 =head2 C<run>
 
 This method starts a new program. It returns the process id of the newly
-executed program. It takes the following arguments:
+executed program.
+
+You can either call it with a single argument (string, arrayref, or coderef),
+which will used as the B<'Program'> argument, or you can supply the following
+key-value pairs:
 
 B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
@@ -70,7 +84,7 @@ B<'StderrEvent'> (optional), the event for delivering lines from the
 program's STDERR. If you don't supply this, they will be printed to the main
 program's STDERR. To explicitly ignore them, set this to C<undef>.
 
-B<'ExitEvent'> (optional, the event to be called when the program has exited.
+B<'ExitEvent'> (optional), the event to be called when the program has exited.
 If you don't supply this, a warning will be printed if the exit status is
 nonzero. To explicitly ignore it, set this to C<undef>.
 
@@ -85,9 +99,9 @@ B<'WheelArgs'> (optional), a hash reference of options which will be passed
 verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
 useful if you want to change the input/output filters and such.
 
-=head2 C<shutdown>
+=head2 C<killall>
 
-This shuts down the POE::Quickie instance. Any running jobs will be killed.
+This kills all currently running programs which POE::Quickie is managing.
 
 =head2 C<programs>
 
@@ -134,6 +148,49 @@ to the options to L<C<run>|/run>.
 =item C<ARG2>: the context variable, if any
 
 =back
+
+=head1 FUNCTIONS
+
+These usage of these functions is modeled after the ones provided by
+L<Capture::Tiny|Capture::Tiny>, except we also give you the exit code.
+
+The functions below will not return until the executed program has exited.
+L<POE::Kernel|POE::Kernel>'s
+L<C<run_one_timeslice>|POE::Kernel/run_one_timeslice> in the meantime,
+however, so rest of your application will continue to run.
+
+All functions take the same arguments as the L<C<run>|/run> method, except
+for the B<'*Event'> and B<'Context'> arguments.
+
+ # these are equivalent
+ ($stdout, $stderr, $exit) = quickie('foo.pl');
+ ($stdout, $stderr, $exit) = quickie(Program => 'foo.pl');
+
+ # ditto
+ ($stdout, $stderr, $exit) = quickie([qw(foo.pl bar)]);
+ ($stdout, $stderr, $exit) = quickie(Program => qw(foo.pl bar)]);
+
+=head2 C<quickie>
+
+Returns 3 values: the stdout, stderr, and exit code of the program.
+
+=head2 C<quickie_tee>
+
+Returns 3 values: the stdout, stderr, and exit code of the program. In
+addition, it will echo the stdout/stderr to your program's stdout/stderr.
+Beware that stdout and stderr in the merged result are not guaranteed to be
+properly ordered due to buffering.
+
+=head2 C<quickie_merged>
+
+Returns 2 values: the merged stdout & stderr, and exit code of the program.
+
+=head2 C<quickie_tee_merged>
+
+Returns 2 values: the merged stdout & stderr, and exit code of the program.
+In addition, it will echo the merged stdout & stderr to your program's
+stdout. Beware that stdout and stderr in the merged result are not guaranteed
+to be properly ordered due to buffering.
 
 =head1 AUTHOR
 

@@ -45,5 +45,4 @@ sub stderr {
     my ($heap, $error, $context) = @_[HEAP, ARG0, ARG2];
     is($error, 'bar', 'Got stderr');
     is($context, 'quux', 'Got context');
-    $heap->{quickie}->shutdown();
 }

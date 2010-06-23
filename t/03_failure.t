@@ -14,7 +14,6 @@ POE::Session->create(
             exit
         )],
     ],
-    options => { trace => 0 },
 );
 
 POE::Kernel->run;
@@ -22,7 +21,7 @@ POE::Kernel->run;
 sub _start {
     my $heap = $_[HEAP];
 
-    $heap->{quickie} = POE::Quickie->new(trace => 0);
+    $heap->{quickie} = POE::Quickie->new();
     $heap->{quickie}->run(
         Program     => sub { die },
         ExitEvent   => 'exit',
@@ -33,5 +32,4 @@ sub _start {
 sub exit {
     my ($heap, $status) = @_[HEAP, ARG0];
     isnt(($status >> 8), 0, 'Got exit status');
-    $heap->{quickie}->shutdown();
 }

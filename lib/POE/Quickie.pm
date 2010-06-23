@@ -6,11 +6,25 @@ use Carp 'croak';
 use POE;
 use POE::Wheel::Run;
 
+require Exporter;
+use base 'Exporter';
+our @EXPORT      = qw(quickie quickie_merged quickie_tee quickie_tee_merged);
+our @EXPORT_OK   = @EXPORT;
+our %EXPORT_TAGS = (ALL => [@EXPORT]);
+
+our %OBJECTS;
+
 sub new {
     my ($package, %args) = @_;
 
+    my $parent_id = $poe_kernel->get_active_session->ID;
+    if (my $self = $OBJECTS{$parent_id}) {
+        return $self;
+    }
+
     my $self = bless \%args, $package;
-    $self->{parent_id} = POE::Kernel->get_active_session->ID;
+    $self->{parent_id} = $parent_id;
+    $OBJECTS{$parent_id} = $self;
 
     POE::Session->create(
         object_states => [
@@ -24,7 +38,7 @@ sub new {
                 _child_timeout
                 _child_stdout
                 _child_stderr
-                _shutdown
+                _killall
             )],
         ],
         options => {
@@ -43,7 +57,6 @@ sub _start {
     my $session_id = $session->ID;
     $self->{session_id} = $session_id;
     $kernel->sig(DIE => '_exception');
-    $kernel->refcount_increment($session_id, __PACKAGE__);
     return;
 }
 
@@ -60,13 +73,13 @@ sub run {
         croak 'AltFork does not currently work on Win32';
     }
 
-    my ($exception, @return)
+    my ($exception, $wheel)
         = $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
 
     # propagate possible exception from POE::Wheel::Run->new()
     croak $exception if $exception;
 
-    return @return;
+    return $wheel->PID;
 }
 
 sub _create_wheel {
@@ -115,7 +128,7 @@ sub _create_wheel {
     }
     $kernel->sig_child($wheel->PID, '_child_signal');
 
-    return (undef, $wheel->PID);
+    return (undef, $wheel);
 }
 
 sub _exception {
@@ -131,6 +144,7 @@ sub _child_signal {
     my ($kernel, $self, $pid, $status) = @_[KERNEL, OBJECT, ARG1, ARG2];
     my $id = $self->_pid_to_id($pid);
     $self->{wheels}{$id}{status} = $status;
+    $self->{lazy}{$pid}{status} = $status if $self->{lazy}{$pid};
     $kernel->yield('_delete_wheel', $id);
     return;
 }
@@ -150,7 +164,21 @@ sub _child_timeout {
 sub _child_stdout {
     my ($kernel, $self, $output, $id) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
-    if (!exists $self->{wheels}{$id}{args}{StdoutEvent}) {
+    my $pid = $self->{wheels}{$id}{obj}->PID;
+
+    if ($self->{lazy}{$pid}) {
+        if ($self->{lazy}{$pid}{Merged}) {
+            push @{ $self->{lazy}{$pid}{merged} }, $output;
+        }
+        else {
+            push @{ $self->{lazy}{$pid}{stdout} }, $output;
+        }
+
+        if ($self->{lazy}{$pid}{Tee}) {
+            print $output, "\n";
+        }
+    }
+    elsif (!exists $self->{wheels}{$id}{args}{StdoutEvent}) {
         print "$output\n";
     }
     elsif (defined (my $event = $self->{wheels}{$id}{args}{StdoutEvent})) {
@@ -159,7 +187,7 @@ sub _child_stdout {
             $self->{parent_id},
             $event,
             $output,
-            $self->{wheels}{$id}{obj}->PID,
+            $pid,
             (defined $context ? $context : ()),
         );
     }
@@ -170,7 +198,23 @@ sub _child_stdout {
 sub _child_stderr {
     my ($kernel, $self, $error, $id) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
-    if (!exists $self->{wheels}{$id}{args}{StderrEvent}) {
+    my $pid = $self->{wheels}{$id}{obj}->PID;
+
+    if ($self->{lazy}{$pid}) {
+        if ($self->{lazy}{$pid}{Merged}) {
+            push @{ $self->{lazy}{$pid}{merged} }, $error;
+        }
+        else {
+            push @{ $self->{lazy}{$pid}{stderr} }, $error;
+        }
+
+        if ($self->{lazy}{$pid}{Tee}) {
+            $self->{lazy}{$pid}{Merged}
+                ? print $error, "\n"
+                : warn $error, "\n";
+        }
+    }
+    elsif (!exists $self->{wheels}{$id}{args}{StderrEvent}) {
         warn "$error\n";
     }
     elsif (defined (my $event = $self->{wheels}{$id}{args}{StderrEvent})) {
@@ -179,7 +223,7 @@ sub _child_stderr {
             $self->{parent_id},
             $event,
             $error,
-            $self->{wheels}{$id}{obj}->PID,
+            $pid,
             (defined $context ? $context : ()),
         );
     }
@@ -235,13 +279,13 @@ sub _pid_to_id {
     return;
 }
 
-sub shutdown {
+sub killall {
     my ($self) = @_;
-    $poe_kernel->call($self->{session_id}, '_shutdown');
+    $poe_kernel->call($self->{session_id}, '_killall');
     return;
 }
 
-sub _shutdown {
+sub _killall {
     my ($kernel, $self) = @_[KERNEL, OBJECT];
 
     $kernel->alarm_remove_all();
@@ -250,7 +294,6 @@ sub _shutdown {
         $self->{wheels}{$id}{obj}->kill();
     }
 
-    $kernel->refcount_decrement($self->{session_id}, __PACKAGE__);
     return;
 }
 
@@ -264,6 +307,82 @@ sub programs {
     }
 
     return \%wheels;
+}
+
+sub _lazy_run {
+    my ($self, %args) = @_;
+
+    my $parent_id = $poe_kernel->get_active_session->ID;
+    $poe_kernel->refcount_increment($parent_id, __PACKAGE__);
+    $poe_kernel->refcount_increment($self->{session_id}, __PACKAGE__);
+
+    my $run_args = delete $args{RunArgs};
+    if (@$run_args == 1 &&
+        (!ref $run_args->[0] || ref($run_args->[0]) =~ /^(?:ARRAY|CODE)$/)) {
+        $run_args = [Program => $run_args->[0]];
+    }
+
+    my $pid = $self->run(
+        @$run_args,
+        ExitEvent => undef,
+        ($args{Tee} ? () : (StderrEvent => undef)),
+        ($args{Tee} ? () : (StdoutEvent => undef)),
+    );
+
+    my $id = $self->_pid_to_id($pid);
+    $self->{lazy}{$pid} = { %args };
+    $poe_kernel->run_one_timeslice() while $self->{wheels}{$id};
+
+    my $result = delete $self->{lazy}{$pid};
+    my $stdout = join '', map { "$_\n" } @{ $result->{stdout} || [] };
+    my $stderr = join '', map { "$_\n" } @{ $result->{stderr} || [] };
+    my $merged = join '', map { "$_\n" } @{ $result->{merged} || [] };
+    my $status = $result->{status};
+
+    $poe_kernel->refcount_decrement($parent_id, __PACKAGE__);
+    $poe_kernel->refcount_decrement($self->{session_id}, __PACKAGE__);
+
+    return $merged, $status if $args{Merged};
+    return $stdout, $stderr, $status;
+}
+
+sub quickie {
+    my @args = @_;
+    my $self = POE::Quickie->new();
+
+    return $self->_lazy_run(
+        RunArgs => \@args
+    );
+}
+
+sub quickie_tee {
+    my @args = @_;
+    my $self = POE::Quickie->new();
+    return $self->_lazy_run(
+        RunArgs => \@args,
+        Tee     => 1,
+    );
+}
+
+sub quickie_merged {
+    my @args = @_;
+    my $self = POE::Quickie->new();
+
+    return $self->_lazy_run(
+        RunArgs => \@args,
+        Merged  => 1,
+    );
+}
+
+sub quickie_tee_merged {
+    my @args = @_;
+    my $self = POE::Quickie->new();
+
+    return $self->_lazy_run(
+        RunArgs => \@args,
+        Tee     => 1,
+        Merged  => 1,
+    );
 }
 
 1;
@@ -281,9 +400,14 @@ POE::Quickie - A lazy way to wrap blocking programs
  sub handler {
      my $heap = $_[HEAP];
 
+     # the really lazy interface
+     my ($stdout, $stderr, $exit) = quickie('foo.pl');
+     print $output, "\n";
+
+     # the more involved interface
      my $heap->{quickie} = POE::Quickie->new();
      $heap->{quickie}->run(
-         Program     => ['foo', 'bar'],
+         Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
      );
@@ -307,6 +431,11 @@ It has some convenience features, such as killing processes after a timeout,
 and storing process-specific context information which will be delivered with
 every event.
 
+There is also an even lazier API which suspends the execution of your event
+handler and gives control back to POE while your task is running, the same
+way L<LWP::UserAgent::POE|LWP::UserAgent::POE> does. This is provided by the
+L<C<quickie_*>|/FUNCTIONS> functions which you can import.
+
 =head1 METHODS
 
 =head2 C<new>
@@ -320,7 +449,11 @@ its documentation for details.
 =head2 C<run>
 
 This method starts a new program. It returns the process id of the newly
-executed program. It takes the following arguments:
+executed program.
+
+You can either call it with a single argument (string, arrayref, or coderef),
+which will used as the B<'Program'> argument, or you can supply the following
+key-value pairs:
 
 B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
@@ -340,7 +473,7 @@ B<'StderrEvent'> (optional), the event for delivering lines from the
 program's STDERR. If you don't supply this, they will be printed to the main
 program's STDERR. To explicitly ignore them, set this to C<undef>.
 
-B<'ExitEvent'> (optional, the event to be called when the program has exited.
+B<'ExitEvent'> (optional), the event to be called when the program has exited.
 If you don't supply this, a warning will be printed if the exit status is
 nonzero. To explicitly ignore it, set this to C<undef>.
 
@@ -355,9 +488,9 @@ B<'WheelArgs'> (optional), a hash reference of options which will be passed
 verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
 useful if you want to change the input/output filters and such.
 
-=head2 C<shutdown>
+=head2 C<killall>
 
-This shuts down the POE::Quickie instance. Any running jobs will be killed.
+This kills all currently running programs which POE::Quickie is managing.
 
 =head2 C<programs>
 
@@ -404,6 +537,49 @@ to the options to L<C<run>|/run>.
 =item C<ARG2>: the context variable, if any
 
 =back
+
+=head1 FUNCTIONS
+
+These usage of these functions is modeled after the ones provided by
+L<Capture::Tiny|Capture::Tiny>, except we also give you the exit code.
+
+The functions below will not return until the executed program has exited.
+L<POE::Kernel|POE::Kernel>'s
+L<C<run_one_timeslice>|POE::Kernel/run_one_timeslice> in the meantime,
+however, so rest of your application will continue to run.
+
+All functions take the same arguments as the L<C<run>|/run> method, except
+for the B<'*Event'> and B<'Context'> arguments.
+
+ # these are equivalent
+ ($stdout, $stderr, $exit) = quickie('foo.pl');
+ ($stdout, $stderr, $exit) = quickie(Program => 'foo.pl');
+
+ # ditto
+ ($stdout, $stderr, $exit) = quickie([qw(foo.pl bar)]);
+ ($stdout, $stderr, $exit) = quickie(Program => qw(foo.pl bar)]);
+
+=head2 C<quickie>
+
+Returns 3 values: the stdout, stderr, and exit code of the program.
+
+=head2 C<quickie_tee>
+
+Returns 3 values: the stdout, stderr, and exit code of the program. In
+addition, it will echo the stdout/stderr to your program's stdout/stderr.
+Beware that stdout and stderr in the merged result are not guaranteed to be
+properly ordered due to buffering.
+
+=head2 C<quickie_merged>
+
+Returns 2 values: the merged stdout & stderr, and exit code of the program.
+
+=head2 C<quickie_tee_merged>
+
+Returns 2 values: the merged stdout & stderr, and exit code of the program.
+In addition, it will echo the merged stdout & stderr to your program's
+stdout. Beware that stdout and stderr in the merged result are not guaranteed
+to be properly ordered due to buffering.
 
 =head1 AUTHOR
 

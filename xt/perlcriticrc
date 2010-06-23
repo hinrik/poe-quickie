@@ -19,3 +19,5 @@ verbose  = 3
 
 [-ErrorHandling::RequireCarping]
 [-ErrorHandling::RequireCheckingReturnValueOfEval]
+
+[-Modules::ProhibitAutomaticExportation]

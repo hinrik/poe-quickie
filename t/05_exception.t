@@ -25,5 +25,4 @@ sub _start {
         );
     };
     ok($@, 'Got exception from POE::Wheel::Run');
-    $heap->{quickie}->shutdown();
 }

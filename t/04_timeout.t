@@ -11,7 +11,6 @@ POE::Session->create(
             exit
         )],
     ],
-    options => { trace => 0 },
 );
 
 POE::Kernel->run;
@@ -19,7 +18,7 @@ POE::Kernel->run;
 sub _start {
     my $heap = $_[HEAP];
 
-    $heap->{quickie} = POE::Quickie->new(trace => 0);
+    $heap->{quickie} = POE::Quickie->new();
     $heap->{quickie}->run(
         Program   => sub { sleep 10 },
         ExitEvent => 'exit',
@@ -34,5 +33,4 @@ sub exit {
     my $duration = time - $heap->{start};
     cmp_ok($duration, '>=', 3, "Timeout is long enough");
     cmp_ok($duration, '<', 10, "Timeout is short enough");
-    $heap->{quickie}->shutdown();
 }
