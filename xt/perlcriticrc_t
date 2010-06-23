@@ -14,6 +14,7 @@ verbose  = 3
 [-BuiltinFunctions::ProhibitStringyEval]
 
 [-Subroutines::ProhibitBuiltinHomonyms]
+[-Subroutines::ProhibitUnusedPrivateSubroutines]
 [-Subroutines::RequireArgUnpacking]
 
 [-ErrorHandling::RequireCarping]

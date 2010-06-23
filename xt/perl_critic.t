@@ -10,8 +10,8 @@ if ( $EVAL_ERROR ) {
     my $msg = 'Test::Perl::Critic required to criticise code';
     plan( skip_all => $msg );
 }
-elsif ($Perl::Critic::VERSION lt 1.098) {
-    my $msg = 'Perl::Critic >= 1.098 required to criticise code';
+elsif ($Perl::Critic::VERSION lt 1.108) {
+    my $msg = 'Perl::Critic >= 1.108 required to criticise code';
     plan( skip_all => $msg );
 }
 
