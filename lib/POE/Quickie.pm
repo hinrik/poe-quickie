@@ -209,7 +209,10 @@ sub _delete_wheel {
     $kernel->alarm_remove($self->{wheels}{$id}{alrm});
     delete $self->{wheels}{$id};
 
-    if (defined $event) {
+    if ($fatal) {
+        # TODO: send an exception to the parent session somehow
+    }   
+    elsif (defined $event) {
         $kernel->post(
             $self->{parent_id},
             $event,
