@@ -279,10 +279,7 @@ POE::Quickie - A lazy way to wrap blocking programs
 
 This module takes care of running external programs for you. It manages the
 wheels, reaps the child processes, and can kill programs after a specified
-timeout if you want.
-
-POE::Quickie can even manage multiple programs for you, as well as store
-context information for each one.
+timeout if you want. It can also store context information for programs.
 
 =head1 METHODS
 
