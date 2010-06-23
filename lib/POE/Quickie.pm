@@ -55,7 +55,7 @@ sub _create_wheel {
     my $program = $args->{Program};
     if ($args->{Copy_inc}) {
         my @inc = map { +'-I' => $_ } @INC;
-        $program = [$^X, @inc, '-e', $program],
+        $program = [$^X, @inc, '-e', $program];
     }
 
     my $wheel;
