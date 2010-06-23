@@ -282,9 +282,16 @@ POE::Quickie - A lazy way to wrap blocking programs
 
 =head1 DESCRIPTION
 
-This module takes care of running external programs for you. It manages the
-wheels, reaps the child processes, and can kill programs after a specified
-timeout if you want. It can also store context information for programs.
+If you need nonblocking access to an external program, or want to execute
+some blocking code in a separate process, but you don't want to write a
+wrapper module or some L<POE::Wheel::Run|POE::Wheel::Run> boilerplate code,
+then POE::Quickie can help. You just specify what you're interested in
+(stdout, stderr, and/or exit code), and POE::Quickie will handle the rest in
+a sensible way.
+
+It has some convenience features, such as killing processes after a timeout,
+and storing process-specific context information which will be delivered with
+every event.
 
 =head1 METHODS
 
@@ -326,7 +333,9 @@ nonzero. To explicitly ignore it, set this to C<undef>.
 B<'Timeout'> (optional), a timeout in seconds after which the program will
 be forcibly killed if it is still running. There is no timeout by default.
 
-B<'Context'> (optional), a variable which will be sent back to you with every event.
+B<'Context'> (optional), a variable which will be sent back to you with every
+event. If you pass a reference, that same reference will be delivered back
+to you later (not a copy), so you can update it as you see fit.
 
 B<'WheelArgs'> (optional), a hash reference of options which will be passed
 verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
