@@ -111,7 +111,7 @@ sub _create_wheel {
     }
     $kernel->sig_child($wheel->PID, '_child_signal');
 
-    return undef, $wheel->PID;
+    return (undef, $wheel->PID);
 }
 
 sub _exception {
