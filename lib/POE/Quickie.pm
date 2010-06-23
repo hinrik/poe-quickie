@@ -322,7 +322,7 @@ If you don't supply this, a warning will be printed if the exit status is
 nonzero. To explicitly ignore it, set this to C<undef>.
 
 B<'Timeout'> (optional), a timeout in seconds after which the program will
-be forcibly killed if it is still running.
+be forcibly killed if it is still running. There is no timeout by default.
 
 B<'Context'> (optional), a variable which will be sent back to you with every event.
 
