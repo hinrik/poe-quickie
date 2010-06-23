@@ -37,6 +37,16 @@ sub new {
     return $self;
 }
 
+sub _start {
+    my ($kernel, $session, $self) = @_[KERNEL, SESSION, OBJECT];
+
+    my $session_id = $session->ID;
+    $self->{session_id} = $session_id;
+    $kernel->sig(DIE => '_exception');
+    $kernel->refcount_increment($session_id, __PACKAGE__);
+    return;
+}
+
 sub run {
     my ($self, %args) = @_;
 
@@ -97,16 +107,6 @@ sub _create_wheel {
     $kernel->sig_child($wheel->PID, '_child_signal');
 
     return $wheel->PID;
-}
-
-sub _start {
-    my ($kernel, $session, $self) = @_[KERNEL, SESSION, OBJECT];
-
-    my $session_id = $session->ID;
-    $self->{session_id} = $session_id;
-    $kernel->sig(DIE => '_exception');
-    $kernel->refcount_increment($session_id, __PACKAGE__);
-    return;
 }
 
 sub _exception {
