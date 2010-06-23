@@ -193,22 +193,23 @@ sub _delete_wheel {
     my ($kernel, $self, $id) = @_[KERNEL, OBJECT, ARG0];
 
     $self->{wheels}{$id}{alive}--;
-    if ($self->{wheels}{$id}{alive} == 0) {
-        $kernel->alarm_remove($self->{wheels}{$id}{alrm});
-        delete $self->{wheels}{$id};
-    }
+    return if $self->{wheels}{$id}{alive};
 
+    my $pid = $self->{wheels}{$id}{obj}->PID;
     my $status = $self->{wheels}{$id}{status};
     my $s = $status >> 8;
     if ($s != 0 && !exists $self->{wheels}{$id}{args}{ExitEvent}) {
         warn "Child $pid exited with status $s\n";
     }
 
-    if ($self->{wheels}{$id}{args}{Fatal}) {
-        # send an exception to the parent session somehow
-    }
-    elsif (defined (my $event = $self->{wheels}{$id}{args}{ExitEvent})) {
-        my $context = $self->{wheels}{$id}{args}{Context};
+    my $event   = $self->{wheels}{$id}{args}{ExitEvent};
+    my $context = $self->{wheels}{$id}{args}{Context};
+    my $fatal   = $self->{wheels}{$id}{args}{Fatal};
+
+    $kernel->alarm_remove($self->{wheels}{$id}{alrm});
+    delete $self->{wheels}{$id};
+
+    if (defined $event) {
         $kernel->post(
             $self->{parent_id},
             $event,
