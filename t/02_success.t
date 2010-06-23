@@ -28,11 +28,11 @@ sub _start {
 }
 
 sub stdout {
-    my ($heap, $output, $id, $context) = @_[HEAP, ARG0..ARG2];
+    my ($heap, $output, $pid, $context) = @_[HEAP, ARG0..ARG2];
     is($output, 'foo', 'Got stdout');
     is($context, 'baz', 'Got context');
     my $programs = $heap->{quickie}->programs();
-    is($programs->{$id}, 'baz', '$quickie->programs() works');
+    is($programs->{$pid}, 'baz', '$quickie->programs() works');
     
     $heap->{quickie}->run(
         Program     => sub { warn "bar\n" },
