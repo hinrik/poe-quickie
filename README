@@ -23,10 +23,8 @@ SYNOPSIS
 DESCRIPTION
     This module takes care of running external programs for you. It manages
     the wheels, reaps the child processes, and can kill programs after a
-    specified timeout if you want.
-
-    POE::Quickie can even manage multiple programs for you, as well as store
-    context information for each one.
+    specified timeout if you want. It can also store context information for
+    programs.
 
 METHODS
   "new"
@@ -42,7 +40,7 @@ METHODS
 
     'Program' (required), will be passed to POE::Wheel::Run's constructor.
 
-    'Copy_inc' (optional), if true, a new instance of the active Perl
+    'CopyINC' (optional), if true, a new instance of the active Perl
     interpreter ($^X) will be launched with 'Program' (which must be a
     string) as the code (*-e*) argument, and the current @INC passed as
     include (*-I*) arguments. Default is false.
@@ -69,7 +67,7 @@ METHODS
     'Context' (optional), a variable which will be sent back to you with
     every event.
 
-    'PWR_args' (optional), a hash reference of options which will be passed
+    'WheelArgs' (optional), a hash reference of options which will be passed
     verbatim to the underlying POE::Wheel::Run object's constructor.
     Possibly useful if you want to change the input/output filters and such.
 

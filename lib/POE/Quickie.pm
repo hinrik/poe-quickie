@@ -52,8 +52,8 @@ sub run {
 
     croak 'Program parameter not supplied' if !defined $args{Program};
 
-    if ($args{Copy_inc} && ref $args{Program}) {
-        croak 'Program must be a string when Copy_inc is enabled';
+    if ($args{CopyINC} && ref $args{Program}) {
+        croak 'Program must be a string when CopyINC is enabled';
     }
 
     return $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
@@ -63,7 +63,7 @@ sub _create_wheel {
     my ($kernel, $self, $args) = @_[KERNEL, OBJECT, ARG0];
 
     my $program = $args->{Program};
-    if ($args->{Copy_inc}) {
+    if ($args->{CopyINC}) {
         my @inc = map { +'-I' => $_ } @INC;
         $program = [$^X, @inc, '-e', $program];
     }
@@ -83,8 +83,8 @@ sub _create_wheel {
                 ? (CloseOnCall => 1)
                 : ()
             ),
-            (defined $args->{PWR_args}
-                ? (%{ $args->{PWR_args} })
+            (defined $args->{WheelArgs}
+                ? (%{ $args->{WheelArgs} })
                 : ()
             ),
         );
@@ -298,7 +298,7 @@ executed program. It takes the following arguments:
 
 B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
-B<'Copy_inc'> (optional), if true, a new instance of the active Perl
+B<'CopyINC'> (optional), if true, a new instance of the active Perl
 interpreter (C<$^X>) will be launched with B<'Program'> (which must be a
 string) as the code (I<-e>) argument, and the current C<@INC> passed as
 include (I<-I>) arguments. Default is false.
@@ -323,7 +323,7 @@ be forcibly killed if it is still running. There is no timeout by default.
 
 B<'Context'> (optional), a variable which will be sent back to you with every event.
 
-B<'PWR_args'> (optional), a hash reference of options which will be passed
+B<'WheelArgs'> (optional), a hash reference of options which will be passed
 verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
 useful if you want to change the input/output filters and such.
 
