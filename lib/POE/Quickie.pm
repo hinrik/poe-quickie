@@ -232,6 +232,17 @@ sub _shutdown {
     return;
 }
 
+sub programs {
+    my ($self) = @_;
+
+    my %wheels;
+    for my $id (keys %{ $self->{wheels} }) {
+        $wheels{$id} = $self->{wheels}{$id}{args}{Context};
+    }
+
+    return \%wheels;
+}
+
 1;
 
 =encoding utf8
@@ -272,7 +283,7 @@ Takes 3 optional parameters: B<'debug'>, B<'default'>, and B<'trace'>. These
 will be passed to the object's L<POE::Session|POE::Session> constructor. See
 its documentation for details.
 
-=head3 C<run>
+=head2 C<run>
 
 This method starts a new program. It returns the id of the newly created
 L<POE::Wheel::Run|POE::Wheel::Run>. It takes the following arguments:
@@ -310,7 +321,12 @@ useful if you want to change the input/output filters and such.
 
 This shuts down the POE::Quickie instance. Any running jobs will be killed.
 
-=head2 OUTPUT
+=head2 C<programs>
+
+Returns a hash reference of all the currently running programs. The key
+is the wheel id, and the value is the context variable, if any.
+
+=head1 OUTPUT
 
 The following events might get sent to your session. The names correspond
 to the options to C<run|/run>.
