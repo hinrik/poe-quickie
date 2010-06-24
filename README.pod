@@ -152,7 +152,7 @@ to the options to L<C<run>|/run>.
 =head1 FUNCTIONS
 
 The usage of these functions is modeled after the ones provided by
-L<Capture::Tiny|Capture::Tiny>. They will now return until the executed
+L<Capture::Tiny|Capture::Tiny>. They will not return until the executed
 program has exited. However,
 L<C<run_one_timeslice>|POE::Kernel/run_one_timeslice> in POE::Kernel will be
 called in the meantime, so the rest of your application will continue to run.
