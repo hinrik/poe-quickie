@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.04  Thu Jun 24 11:09:18 GMT 2010
     - Recreate our POE session in case it had run out of work and died
 
 0.03  Thu Jun 24 01:33:27 GMT 2010
