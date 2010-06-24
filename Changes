@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Fix a bug in the SYNOPSIS and improved the docs elsewhere as well
 
 0.02  Thu Jun 24 01:21:17 GMT 2010
     - Renamed CopyINC to AltFork (like POE::Component::Generic and other

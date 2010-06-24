@@ -248,15 +248,11 @@ sub _delete_wheel {
 
     my $event   = $self->{wheels}{$id}{args}{ExitEvent};
     my $context = $self->{wheels}{$id}{args}{Context};
-    my $fatal   = $self->{wheels}{$id}{args}{Fatal};
 
     $kernel->alarm_remove($self->{wheels}{$id}{alrm});
     delete $self->{wheels}{$id};
 
-    if ($fatal) {
-        # TODO: send an exception to the parent session somehow
-    }   
-    elsif (defined $event) {
+    if (defined $event) {
         $kernel->post(
             $self->{parent_id},
             $event,
@@ -401,8 +397,8 @@ POE::Quickie - A lazy way to wrap blocking programs
      my $heap = $_[HEAP];
 
      # the really lazy interface
-     my ($stdout, $stderr, $exit) = quickie('foo.pl');
-     print $output, "\n";
+     my ($stdout, $stderr, $exit_status) = quickie('foo.pl');
+     print $stdout;
 
      # the more involved interface
      my $heap->{quickie} = POE::Quickie->new();
@@ -434,7 +430,7 @@ every event.
 There is also an even lazier API which suspends the execution of your event
 handler and gives control back to POE while your task is running, the same
 way L<LWP::UserAgent::POE|LWP::UserAgent::POE> does. This is provided by the
-L<C<quickie_*>|/FUNCTIONS> functions which you can import.
+L<C<quickie_*>|/FUNCTIONS> functions which are exported by default.
 
 =head1 METHODS
 
@@ -540,24 +536,14 @@ to the options to L<C<run>|/run>.
 
 =head1 FUNCTIONS
 
-These usage of these functions is modeled after the ones provided by
-L<Capture::Tiny|Capture::Tiny>, except we also give you the exit code.
+The usage of these functions is modeled after the ones provided by
+L<Capture::Tiny|Capture::Tiny>. They will now return until the executed
+program has exited. However,
+L<C<run_one_timeslice>|POE::Kernel/run_one_timeslice> in POE::Kernel will be
+called in the meantime, so the rest of your application will continue to run.
 
-The functions below will not return until the executed program has exited.
-L<POE::Kernel|POE::Kernel>'s
-L<C<run_one_timeslice>|POE::Kernel/run_one_timeslice> in the meantime,
-however, so rest of your application will continue to run.
-
-All functions take the same arguments as the L<C<run>|/run> method, except
-for the B<'*Event'> and B<'Context'> arguments.
-
- # these are equivalent
- ($stdout, $stderr, $exit) = quickie('foo.pl');
- ($stdout, $stderr, $exit) = quickie(Program => 'foo.pl');
-
- # ditto
- ($stdout, $stderr, $exit) = quickie([qw(foo.pl bar)]);
- ($stdout, $stderr, $exit) = quickie(Program => qw(foo.pl bar)]);
+They all take the same arguments as the L<C<run>|/run> method, except for the
+B<'*Event'> and B<'Context'> arguments.
 
 =head2 C<quickie>
 
