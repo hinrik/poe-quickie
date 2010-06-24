@@ -26,10 +26,17 @@ sub new {
     $self->{parent_id} = $parent_id;
     $OBJECTS{$parent_id} = $self;
 
+    return $self;
+}
+
+sub _create_session {
+    my ($self) = @_;
+
     POE::Session->create(
         object_states => [
             $self => [qw(
                 _start
+                _stop
                 _exception
                 _create_wheel
                 _delete_wheel
@@ -48,7 +55,9 @@ sub new {
         },
     );
 
-    return $self;
+    $self->{got_session} = 1;
+
+    return;
 }
 
 sub _start {
@@ -57,6 +66,12 @@ sub _start {
     my $session_id = $session->ID;
     $self->{session_id} = $session_id;
     $kernel->sig(DIE => '_exception');
+    return;
+}
+
+sub _stop {
+    my $self = $_[OBJECT];
+    $self->{got_session} = 0;
     return;
 }
 
@@ -72,6 +87,8 @@ sub run {
     if ($args{AltFork} && $^O eq 'Win32') {
         croak 'AltFork does not currently work on Win32';
     }
+
+    $self->_create_session() if !$self->{got_session};
 
     my ($exception, $wheel)
         = $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
@@ -308,6 +325,7 @@ sub programs {
 sub _lazy_run {
     my ($self, %args) = @_;
 
+    $self->_create_session() if !$self->{got_session};
     my $parent_id = $poe_kernel->get_active_session->ID;
     $poe_kernel->refcount_increment($parent_id, __PACKAGE__);
     $poe_kernel->refcount_increment($self->{session_id}, __PACKAGE__);

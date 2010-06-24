@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Recreate our POE session in case it had run out of work and died
 
 0.03  Thu Jun 24 01:33:27 GMT 2010
     - Fix a bug in the SYNOPSIS and improved the docs elsewhere as well
