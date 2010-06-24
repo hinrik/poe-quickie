@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.02  Thu Jun 24 01:21:17 GMT 2010
     - Renamed CopyINC to AltFork (like POE::Component::Generic and other
       modules call this feature) and made it croak if used on Win32
     - Make sure we have reaped the child process before we emit ExitEvent
