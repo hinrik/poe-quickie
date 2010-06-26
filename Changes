@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.05  Sat Jun 26 02:02:56 GMT 2010
     - Made 06_lazy.t a little less strict
 
 0.04  Thu Jun 24 11:09:18 GMT 2010
