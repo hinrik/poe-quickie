@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Made 06_lazy.t a little less strict
 
 0.04  Thu Jun 24 11:09:18 GMT 2010
     - Recreate our POE session in case it had run out of work and died

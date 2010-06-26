@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use POE;
 use POE::Quickie;
-use Test::More tests => 8;
+use Test::More tests => 10;
 use Capture::Tiny qw(capture);
 
 POE::Session->create(
@@ -26,7 +26,8 @@ sub _start {
     cmp_ok($after - $before, '>=', 2, 'The program runs');
 
     my ($merged) = quickie_merged(sub { warn "foo\n"; print "bar\n" });
-    is($merged, "foo\nbar\n", 'Got merged output');
+    like($merged, qr/foo\n/m, 'Got merged output');
+    like($merged, qr/bar\n/m, 'Got merged output');
 
     ($stdout, $stderr) = capture {
         quickie_tee(sub { print "stdout\n"; warn "stderr\n"});
@@ -40,6 +41,7 @@ sub _start {
         quickie_tee_merged(sub { warn "stderr\n"; print "stdout\n" });
     };
 
-    is($stdout, "stderr\nstdout\n", 'Got tee merged stdout');
+    like($stdout, qr/stderr\n/m, 'Got tee merged stdout');
+    like($stdout, qr/stdout\n/m, 'Got tee merged stdout');
     is($stderr, '', 'Got tee merged stderr');
 }
