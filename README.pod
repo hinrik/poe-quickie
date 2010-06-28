@@ -51,7 +51,11 @@ L<C<quickie_*>|/FUNCTIONS> functions which are exported by default.
 
 =head2 C<new>
 
-Constructs a POE::Quickie object. You'll want to hold on to it.
+Constructs a POE::Quickie object. You only need to do this if you want to
+be able to call L<C<run>|/run>, L<C<killall>|/killall>, or
+L<C<programs>|/programs>. It is also safe to let go of the object once you're
+done calling its methods. POE::Quickie will continue to run your programs
+until they finish.
 
 Takes 3 optional parameters: B<'debug'>, B<'default'>, and B<'trace'>. These
 will be passed to the object's L<POE::Session|POE::Session> constructor. See
@@ -162,25 +166,26 @@ B<'*Event'> and B<'Context'> arguments.
 
 =head2 C<quickie>
 
-Returns 3 values: the stdout, stderr, and exit code of the program.
+Returns 3 values: the stdout, stderr, and exit code (C<$?>) of the program.
 
 =head2 C<quickie_tee>
 
-Returns 3 values: the stdout, stderr, and exit code of the program. In
-addition, it will echo the stdout/stderr to your program's stdout/stderr.
+Returns 3 values: the stdout, stderr, and exit code (C<$?>) of the program.
+In addition, it will echo the stdout/stderr to your program's stdout/stderr.
 Beware that stdout and stderr in the merged result are not guaranteed to be
 properly ordered due to buffering.
 
 =head2 C<quickie_merged>
 
-Returns 2 values: the merged stdout & stderr, and exit code of the program.
+Returns 2 values: the merged stdout & stderr, and exit code (C<$?>) of the
+program.
 
 =head2 C<quickie_tee_merged>
 
-Returns 2 values: the merged stdout & stderr, and exit code of the program.
-In addition, it will echo the merged stdout & stderr to your program's
-stdout. Beware that stdout and stderr in the merged result are not guaranteed
-to be properly ordered due to buffering.
+Returns 2 values: the merged stdout & stderr, and exit code (C<$?>) of the
+program. In addition, it will echo the merged stdout & stderr to your
+program's stdout. Beware that stdout and stderr in the merged result are not
+guaranteed to be properly ordered due to buffering.
 
 =head1 AUTHOR
 
