@@ -419,7 +419,7 @@ POE::Quickie - A lazy way to wrap blocking programs
      print $stdout;
 
      # the more involved interface
-     my $heap->{quickie} = POE::Quickie->new();
+     $heap->{quickie} = POE::Quickie->new();
      $heap->{quickie}->run(
          Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
