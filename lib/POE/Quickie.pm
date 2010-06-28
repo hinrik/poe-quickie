@@ -504,7 +504,7 @@ useful if you want to change the input/output filters and such.
 
 =head2 C<killall>
 
-This kills all currently running programs which POE::Quickie is managing.
+This kills all programs which POE::Quickie is managing for your session.
 
 =head2 C<programs>
 
