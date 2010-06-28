@@ -74,8 +74,8 @@ B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
 B<'AltFork'> (optional), if true, a new instance of the active Perl
 interpreter (C<$^X>) will be launched with B<'Program'> (which must be a
-string) as the code (I<-e>) argument, and the current C<@INC> passed as
-include (I<-I>) arguments. Default is false.
+string) as the code argument (I<-e>), and the current C<@INC> passed as
+include arguments (I<-I>). Default is false.
 
 B<'ProgramArgs'> (optional), same as the epynomous parameter to
 POE::Wheel::Run.
