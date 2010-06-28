@@ -2,6 +2,7 @@ Revision history for POE-Quickie
 
 {{$NEXT}}
     - Improve docs in a few places
+    - Allow specifying a signal to killall()
 
 0.05  Sat Jun 26 02:02:56 GMT 2010
     - Made 06_lazy.t a little less strict

@@ -293,18 +293,18 @@ sub _pid_to_id {
 }
 
 sub killall {
-    my ($self) = @_;
-    $poe_kernel->call($self->{session_id}, '_killall');
+    my $self = shift;
+    $poe_kernel->call($self->{session_id}, '_killall', @_);
     return;
 }
 
 sub _killall {
-    my ($kernel, $self) = @_[KERNEL, OBJECT];
+    my ($kernel, $self, $signal) = @_[KERNEL, OBJECT, ARG0];
 
     $kernel->alarm_remove_all();
 
     for my $id (keys %{ $self->{wheels}}) {
-        $self->{wheels}{$id}{obj}->kill();
+        $self->{wheels}{$id}{obj}->kill($signal);
     }
 
     return;
@@ -509,6 +509,7 @@ useful if you want to change the input/output filters and such.
 =head2 C<killall>
 
 This kills all programs which POE::Quickie is managing for your session.
+Takes one optional argument, a signal name. Defaults to SIGTERM.
 
 =head2 C<programs>
 

@@ -106,6 +106,7 @@ useful if you want to change the input/output filters and such.
 =head2 C<killall>
 
 This kills all programs which POE::Quickie is managing for your session.
+Takes one optional argument, a signal name. Defaults to SIGTERM.
 
 =head2 C<programs>
 
