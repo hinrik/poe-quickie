@@ -412,15 +412,15 @@ POE::Quickie - A lazy way to wrap blocking programs
  use POE::Quickie;
 
  sub handler {
-     my $heap = $_[HEAP];
+     my $self = $_[OBJECT];
 
      # the really lazy interface
      my ($stdout, $stderr, $exit_status) = quickie('foo.pl');
      print $stdout;
 
      # the more involved interface
-     $heap->{quickie} = POE::Quickie->new();
-     $heap->{quickie}->run(
+     $self->{quickie} = POE::Quickie->new();
+     $self->{quickie}->run(
          Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
