@@ -73,9 +73,10 @@ key-value pairs:
 B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
 B<'AltFork'> (optional), if true, a new instance of the active Perl
-interpreter (C<$^X>) will be launched with B<'Program'> (which must be a
-string) as the code argument (I<-e>), and the current C<@INC> passed as
-include arguments (I<-I>). Default is false.
+interpreter (L<C<$^X>|perlvar>) will be launched with B<'Program'> (which
+must be a string) as the code argument (L<I<-e>|perlrun>), and the current
+L<C<@INC>|perlvar> passed as include arguments (L<I<-I>|perlrun>). Default
+is false.
 
 B<'ProgramArgs'> (optional), same as the epynomous parameter to
 POE::Wheel::Run.
@@ -167,24 +168,25 @@ B<'*Event'> and B<'Context'> arguments.
 
 =head2 C<quickie>
 
-Returns 3 values: the stdout, stderr, and exit code (C<$?>) of the program.
+Returns 3 values: the stdout, stderr, and exit code (L<C<$?>|perlvar>) of the
+program.
 
 =head2 C<quickie_tee>
 
-Returns 3 values: the stdout, stderr, and exit code (C<$?>) of the program.
-In addition, it will echo the stdout/stderr to your program's stdout/stderr.
-Beware that stdout and stderr in the merged result are not guaranteed to be
-properly ordered due to buffering.
+Returns 3 values: the stdout, stderr, and exit code (L<C<$?>|perlvar>) of the
+program. In addition, it will echo the stdout/stderr to your program's
+stdout/stderr. Beware that stdout and stderr in the merged result are not
+guaranteed to be properly ordered due to buffering.
 
 =head2 C<quickie_merged>
 
-Returns 2 values: the merged stdout & stderr, and exit code (C<$?>) of the
-program.
+Returns 2 values: the merged stdout & stderr, and exit code (L<C<$?>|perlvar>)
+of the program.
 
 =head2 C<quickie_tee_merged>
 
-Returns 2 values: the merged stdout & stderr, and exit code (C<$?>) of the
-program. In addition, it will echo the merged stdout & stderr to your
+Returns 2 values: the merged stdout & stderr, and exit code (L<C<$?>|perlvar>)
+of the program. In addition, it will echo the merged stdout & stderr to your
 program's stdout. Beware that stdout and stderr in the merged result are not
 guaranteed to be properly ordered due to buffering.
 

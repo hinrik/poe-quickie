@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Enable CloseOnCall on non-Win32 only instead of on Win32 only.
 
 0.06  Mon Jun 28 19:29:56 GMT 2010
     - Improve docs in a few places

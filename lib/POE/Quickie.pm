@@ -119,7 +119,7 @@ sub _create_wheel {
                 ? (ProgramArgs => $args->{ProgramArgs})
                 : ()
             ),
-            (ref $args->{Program} eq 'CODE' && $^O eq 'Win32'
+            ($^O ne 'Win32'
                 ? (CloseOnCall => 1)
                 : ()
             ),
