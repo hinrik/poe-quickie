@@ -136,10 +136,16 @@ sub _create_wheel {
     $self->{wheels}{$wheel->ID}{args} = $args;
     $self->{wheels}{$wheel->ID}{alive} = 2;
 
+    if ($args->{Input}) {
+        $wheel->put($args->{Input});
+        $wheel->shutdown_stdin();
+    }
+
     if (defined $args->{Timeout}) {
         $self->{wheels}{$wheel->ID}{alrm}
             = $kernel->delay_set('_child_timeout', $args->{Timeout}, $wheel->ID);
     }
+
     $kernel->sig_child($wheel->PID, '_child_signal');
 
     return (undef, $wheel);
@@ -462,6 +468,10 @@ is false.
 
 B<'ProgramArgs'> (optional), same as the epynomous parameter to
 POE::Wheel::Run.
+
+B<'Input'> (optional), a string containing the input to the program. This
+string, if provided, will be sent immediately to the program, and its
+stdin will then be shut down.
 
 B<'StdoutEvent'> (optional), the event for delivering lines from the
 program's STDOUT. If you don't supply this, they will be printed to the main

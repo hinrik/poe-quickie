@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Add an 'Input' parameter to run() for writing to the program's stdin
 
 0.07  Sat Jul 3 04:20:02 GMT 2010
     - Enable CloseOnCall on non-Win32 only instead of on Win32 only.

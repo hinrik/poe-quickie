@@ -81,6 +81,10 @@ is false.
 B<'ProgramArgs'> (optional), same as the epynomous parameter to
 POE::Wheel::Run.
 
+B<'Input'> (optional), a string containing the input to the program. This
+string, if provided, will be sent immediately to the program, and its
+stdin will then be shut down.
+
 B<'StdoutEvent'> (optional), the event for delivering lines from the
 program's STDOUT. If you don't supply this, they will be printed to the main
 program's STDOUT. To explicitly ignore them, set this to C<undef>.
