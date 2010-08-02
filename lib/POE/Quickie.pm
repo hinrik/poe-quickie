@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Carp 'croak';
 use POE;
+use POE::Filter::Stream;
 use POE::Wheel::Run;
 
 require Exporter;
@@ -41,6 +42,7 @@ sub _create_session {
                 _create_wheel
                 _child_signal
                 _child_timeout
+                _child_stdin
                 _child_stdout
                 _child_stderr
                 _killall
@@ -109,6 +111,8 @@ sub _create_wheel {
     my $wheel;
     eval {
         $wheel = POE::Wheel::Run->new(
+            StdinFilter => POE::Filter::Stream->new(),
+            StdinEvent  => '_child_stdin',
             StdoutEvent => '_child_stdout',
             StderrEvent => '_child_stderr',
             Program     => $program,
@@ -136,9 +140,8 @@ sub _create_wheel {
     $self->{wheels}{$wheel->ID}{args} = $args;
     $self->{wheels}{$wheel->ID}{alive} = 2;
 
-    if ($args->{Input}) {
+    if (defined $args->{Input}) {
         $wheel->put($args->{Input});
-        $wheel->shutdown_stdin();
     }
 
     if (defined $args->{Timeout}) {
@@ -194,6 +197,12 @@ sub _child_signal {
 sub _child_timeout {
     my ($self, $id) = @_[OBJECT, ARG0];
     $self->{wheels}{$id}{obj}->kill();
+    return;
+}
+
+sub _child_stdin {
+    my ($self, $id) = @_[OBJECT, ARG0];
+    $self->{wheels}{$id}{obj}->shutdown_stdin();
     return;
 }
 
@@ -471,7 +480,9 @@ POE::Wheel::Run.
 
 B<'Input'> (optional), a string containing the input to the program. This
 string, if provided, will be sent immediately to the program, and its
-stdin will then be shut down.
+stdin will then be shut down. Note: no processing will be done on the data
+before it is sent, so make sure you include newlines where needed if the
+program requires them.
 
 B<'StdoutEvent'> (optional), the event for delivering lines from the
 program's STDOUT. If you don't supply this, they will be printed to the main

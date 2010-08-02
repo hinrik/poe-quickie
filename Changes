@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - We were shutting down stdin too soon. Fixed and added a test for it.
 
 0.08  Mon Aug 2 09:19:37 GMT 2010
     - Add an 'Input' parameter to run() for writing to the program's stdin

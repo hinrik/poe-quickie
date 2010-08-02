@@ -83,7 +83,9 @@ POE::Wheel::Run.
 
 B<'Input'> (optional), a string containing the input to the program. This
 string, if provided, will be sent immediately to the program, and its
-stdin will then be shut down.
+stdin will then be shut down. Note: no processing will be done on the data
+before it is sent, so make sure you include newlines where needed if the
+program requires them.
 
 B<'StdoutEvent'> (optional), the event for delivering lines from the
 program's STDOUT. If you don't supply this, they will be printed to the main
