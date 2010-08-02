@@ -39,9 +39,7 @@ sub _create_session {
                 _stop
                 _exception
                 _create_wheel
-                _delete_wheel
                 _child_signal
-                _child_closed
                 _child_timeout
                 _child_stdout
                 _child_stderr
@@ -111,7 +109,6 @@ sub _create_wheel {
     my $wheel;
     eval {
         $wheel = POE::Wheel::Run->new(
-            CloseEvent  => '_child_closed',
             StdoutEvent => '_child_stdout',
             StderrEvent => '_child_stderr',
             Program     => $program,
@@ -160,15 +157,31 @@ sub _exception {
 sub _child_signal {
     my ($kernel, $self, $pid, $status) = @_[KERNEL, OBJECT, ARG1, ARG2];
     my $id = $self->_pid_to_id($pid);
+
     $self->{wheels}{$id}{status} = $status;
     $self->{lazy}{$pid}{status} = $status if $self->{lazy}{$pid};
-    $kernel->yield('_delete_wheel', $id);
-    return;
-}
 
-sub _child_closed {
-    my ($kernel, $self, $id) = @_[KERNEL, OBJECT, ARG0];
-    $kernel->yield('_delete_wheel', $id);
+    my $s = $status >> 8;
+    if ($s != 0 && !exists $self->{wheels}{$id}{args}{ExitEvent}) {
+        warn "Child $pid exited with status $s\n";
+    }
+
+    my $event   = $self->{wheels}{$id}{args}{ExitEvent};
+    my $context = $self->{wheels}{$id}{args}{Context};
+
+    $kernel->alarm_remove($self->{wheels}{$id}{alrm});
+    delete $self->{wheels}{$id};
+
+    if (defined $event) {
+        $kernel->post(
+            $self->{parent_id},
+            $event,
+            $status,
+            $pid,
+            (defined $context ? $context : ()),
+        );
+    }
+
     return;
 }
 
@@ -240,40 +253,6 @@ sub _child_stderr {
             $self->{parent_id},
             $event,
             $error,
-            $pid,
-            (defined $context ? $context : ()),
-        );
-    }
-
-    return;
-}
-
-# only delete the wheel after both child_signal and child_closed
-# have called this
-sub _delete_wheel {
-    my ($kernel, $self, $id) = @_[KERNEL, OBJECT, ARG0];
-
-    $self->{wheels}{$id}{alive}--;
-    return if $self->{wheels}{$id}{alive};
-
-    my $pid = $self->{wheels}{$id}{obj}->PID;
-    my $status = $self->{wheels}{$id}{status};
-    my $s = $status >> 8;
-    if ($s != 0 && !exists $self->{wheels}{$id}{args}{ExitEvent}) {
-        warn "Child $pid exited with status $s\n";
-    }
-
-    my $event   = $self->{wheels}{$id}{args}{ExitEvent};
-    my $context = $self->{wheels}{$id}{args}{Context};
-
-    $kernel->alarm_remove($self->{wheels}{$id}{alrm});
-    delete $self->{wheels}{$id};
-
-    if (defined $event) {
-        $kernel->post(
-            $self->{parent_id},
-            $event,
-            $status,
             $pid,
             (defined $context ? $context : ()),
         );
