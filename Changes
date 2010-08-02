@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.08  Mon Aug 2 09:19:37 GMT 2010
     - Add an 'Input' parameter to run() for writing to the program's stdin
 
 0.07  Sat Jul 3 04:20:02 GMT 2010
