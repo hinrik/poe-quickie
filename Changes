@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Make all warnings fatal
 
 0.09  Mon Aug 2 09:42:54 GMT 2010
     - We were shutting down stdin too soon. Fixed and added a test for it.

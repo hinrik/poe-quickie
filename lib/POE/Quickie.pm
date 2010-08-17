@@ -1,7 +1,7 @@
 package POE::Quickie;
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use Carp 'croak';
 use POE;
 use POE::Filter::Stream;
