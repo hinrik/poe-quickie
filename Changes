@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.10  Tue Aug 17 22:55:26 GMT 2010
     - Make all warnings fatal
 
 0.09  Mon Aug 2 09:42:54 GMT 2010
