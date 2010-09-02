@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.11  Thu Sep 2 21:11:57 GMT 2010
     - Change the API a bit to make it more of a singleton
 
 0.10  Tue Aug 17 22:55:26 GMT 2010
