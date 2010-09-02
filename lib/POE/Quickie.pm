@@ -75,6 +75,7 @@ sub _stop {
 
 sub run {
     my ($self, %args) = @_;
+    $self = POE::Quickie->new() if ref $self ne 'POE::Quickie';
 
     croak 'Program parameter not supplied' if !defined $args{Program};
 
@@ -286,6 +287,7 @@ sub _pid_to_id {
 
 sub killall {
     my $self = shift;
+    $self = POE::Quickie->new() if ref $self ne 'POE::Quickie';
     $poe_kernel->call($self->{session_id}, '_killall', @_);
     return;
 }
@@ -304,6 +306,7 @@ sub _killall {
 
 sub programs {
     my ($self) = @_;
+    $self = POE::Quickie->new() if ref $self ne 'POE::Quickie';
 
     my %wheels;
     for my $id (keys %{ $self->{wheels} }) {
@@ -411,8 +414,7 @@ POE::Quickie - A lazy way to wrap blocking programs
      print $stdout;
 
      # the more involved interface
-     $self->{quickie} = POE::Quickie->new();
-     $self->{quickie}->run(
+     POE::Quickie->run(
          Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
@@ -447,10 +449,11 @@ L<C<quickie_*>|/FUNCTIONS> functions which are exported by default.
 =head2 C<new>
 
 Constructs a POE::Quickie object. You only need to do this if you want to
-be able to call L<C<run>|/run>, L<C<killall>|/killall>, or
-L<C<programs>|/programs>. It is also safe to let go of the object once you're
-done calling its methods. POE::Quickie will continue to run your programs
-until they finish.
+specify any of the parameters below, since a POE::Quickie object will be
+constructed automatically whenever it is needed. The rest of the methods can
+be called on the object (C<< $object->run() >>) or as class methods
+(C<< POE::Quickie->run() >>). You can safely let the object go out of scope;
+POE::Quickie will continue to run your programs until they finish.
 
 Takes 3 optional parameters: B<'debug'>, B<'default'>, and B<'trace'>. These
 will be passed to the object's L<POE::Session|POE::Session> constructor. See

@@ -19,8 +19,8 @@ POE::Kernel->run;
 sub _start {
     my $heap = $_[HEAP];
 
-    $heap->{quickie} = POE::Quickie->new();
-    $heap->{quickie}->run(
+    #$heap->{quickie} = POE::Quickie->new();
+    POE::Quickie->run(
         Program     => sub { print "foo\n" },
         StdoutEvent => 'stdout',
         Context     => 'baz',
@@ -31,10 +31,10 @@ sub stdout {
     my ($heap, $output, $pid, $context) = @_[HEAP, ARG0..ARG2];
     is($output, 'foo', 'Got stdout');
     is($context, 'baz', 'Got context');
-    my $programs = $heap->{quickie}->programs();
+    my $programs = POE::Quickie->programs();
     is($programs->{$pid}, 'baz', '$quickie->programs() works');
     
-    $heap->{quickie}->run(
+    POE::Quickie->run(
         Program     => sub { warn "bar\n" },
         StderrEvent => 'stderr',
         Context     => 'quux',
