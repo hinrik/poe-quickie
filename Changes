@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.12  Sat Sep 25 07:57:23 GMT 2010
     - Made the docs more readable and added more links
     - Made the wording of one warning a bit clearer
     - Rename programs() method to processes()
