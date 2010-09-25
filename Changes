@@ -5,6 +5,7 @@ Revision history for POE-Quickie
     - Made the wording of one warning a bit clearer
     - Rename programs() method to processes()
     - Depend on POE 1.291 for correct exit value handling in POE::Wheel::Run
+    - If we catch an exception, prefix the warning with 'POE::Quickie'
 
 0.11  Thu Sep 2 21:11:57 GMT 2010
     - Change the API a bit to make it more of a singleton

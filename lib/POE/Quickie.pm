@@ -156,7 +156,7 @@ sub _create_wheel {
 sub _exception {
     my ($kernel, $self, $ex) = @_[KERNEL, OBJECT, ARG1];
     chomp $ex->{error_str};
-    warn "Event $ex->{event} in session "
+    warn __PACKAGE__.": Event $ex->{event} in session "
         .$ex->{dest_session}->ID." raised exception:\n  $ex->{error_str}\n";
     $kernel->sig_handled();
     return;
