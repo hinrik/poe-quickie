@@ -31,8 +31,8 @@ sub stdout {
     my ($heap, $output, $pid, $context) = @_[HEAP, ARG0..ARG2];
     is($output, 'foo', 'Got stdout');
     is($context, 'baz', 'Got context');
-    my $programs = POE::Quickie->programs();
-    is($programs->{$pid}, 'baz', '$quickie->programs() works');
+    my $procs = POE::Quickie->processes();
+    is($procs->{$pid}, 'baz', '$quickie->processes() works');
     
     POE::Quickie->run(
         Program     => sub { warn "bar\n" },
