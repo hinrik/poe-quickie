@@ -21,6 +21,7 @@ verbose  = 3
 [-ErrorHandling::RequireCheckingReturnValueOfEval]
 
 # more policies we don't care about in tests
+[-InputOutput::ProhibitExplicitStdin]
 [-InputOutput::RequireBriefOpen]
 [-Modules::RequireEndWithOne]
 [-Modules::RequireExplicitPackage]
