@@ -8,9 +8,7 @@ POE::Quickie - A lazy way to wrap blocking programs
 
  use POE::Quickie;
 
- sub handler {
-     my $self = $_[OBJECT];
-
+ sub event_handler {
      # the really lazy interface
      my ($stdout, $stderr, $exit_status) = quickie('foo.pl');
      print $stdout;
@@ -52,7 +50,7 @@ L<C<quickie_*>|/FUNCTIONS> functions which are exported by default.
 
 Constructs a POE::Quickie object. You only need to do this if you want to
 specify any of the parameters below, since a POE::Quickie object will be
-constructed automatically whenever it is needed. The rest of the methods can
+constructed automatically when it is needed. The rest of the methods can
 be called on the object (C<< $object->run() >>) or as class methods
 (C<< POE::Quickie->run() >>). You can safely let the object go out of scope;
 POE::Quickie will continue to run your programs until they finish.
@@ -64,28 +62,23 @@ its documentation for details.
 =head2 C<run>
 
 This method starts a new program. It returns the process id of the newly
-executed program.
+spawned child process.
 
 You can either call it with a single argument (string, arrayref, or coderef),
 which will used as the B<'Program'> argument, or you can supply the following
 key-value pairs:
 
-B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
+B<'Program'> (required), will be passed to directly to
+L<POE::Wheel::Run|POE::Wheel::Run/new>'s constructor.
 
-B<'AltFork'> (optional), if true, a new instance of the active Perl
-interpreter (L<C<$^X>|perlvar>) will be launched with B<'Program'> (which
-must be a string) as the code argument (L<I<-e>|perlrun>), and the current
-L<C<@INC>|perlvar> passed as include arguments (L<I<-I>|perlrun>). Default
-is false.
-
-B<'ProgramArgs'> (optional), same as the epynomous parameter to
-POE::Wheel::Run.
+B<'ProgramArgs'> (optional), will be passed directly to
+L<POE::Wheel::Run|POE::Wheel::Run/new>'s constructor.
 
 B<'Input'> (optional), a string containing the input to the program. This
 string, if provided, will be sent immediately to the program, and its
-stdin will then be shut down. Note: no processing will be done on the data
-before it is sent, so make sure you include newlines where needed if the
-program requires them.
+stdin will then be shut down. B<Note:> no processing will be done on the data
+before it is sent. For instance, if you are executing a program which expects
+line-based input, be sure to end your input with a newline.
 
 B<'StdoutEvent'> (optional), the event for delivering lines from the
 program's STDOUT. If you don't supply this, they will be printed to the main
@@ -96,15 +89,22 @@ program's STDERR. If you don't supply this, they will be printed to the main
 program's STDERR. To explicitly ignore them, set this to C<undef>.
 
 B<'ExitEvent'> (optional), the event to be called when the program has exited.
-If you don't supply this, a warning will be printed if the exit status is
-nonzero. To explicitly ignore it, set this to C<undef>.
-
-B<'Timeout'> (optional), a timeout in seconds after which the program will
-be forcibly killed if it is still running. There is no timeout by default.
+If you don't supply this, a warning indicating the exit code will be printed
+if it is nonzero. To explicitly ignore it, set this to C<undef>.
 
 B<'Context'> (optional), a variable which will be sent back to you with every
 event. If you pass a reference, that same reference will be delivered back
 to you later (not a copy), so you can update it as you see fit.
+
+B<'Timeout'> (optional), a timeout in seconds after which the program will
+be forcibly L<killed|POE::Wheel::Run/kill> if it is still running. There is
+no timeout by default.
+
+B<'AltFork'> (optional), if true, a new instance of the active Perl
+interpreter (L<C<$^X>|perlvar>) will be launched with B<'Program'> (which
+must be a string) as the code argument (L<I<-e>|perlrun>), and the current
+L<C<@INC>|perlvar> passed as include arguments (L<I<-I>|perlrun>). Default
+is false.
 
 B<'WheelArgs'> (optional), a hash reference of options which will be passed
 verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
@@ -112,8 +112,8 @@ useful if you want to change the input/output filters and such.
 
 =head2 C<killall>
 
-This kills all programs which POE::Quickie is managing for your session.
-Takes one optional argument, a signal name. Defaults to SIGTERM.
+This L<kills|POE::Wheel::Run/kill> all programs which POE::Quickie is
+managing for your session. Takes one optional argument, a signal name.
 
 =head2 C<programs>
 
@@ -153,7 +153,7 @@ to the options to L<C<run>|/run>.
 
 =over 4
 
-=item C<ARG0>: the exit code produced by the program
+=item C<ARG0>: the exit code (L<C<$?>|perlvar>) of the child process
 
 =item C<ARG1>: the process id of the child process
 
