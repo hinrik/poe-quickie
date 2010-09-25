@@ -414,7 +414,7 @@ POE::Quickie - A lazy way to wrap blocking programs
      print $stdout;
 
      # the more involved interface
-     POE::Quickie->run(
+     my $pid = POE::Quickie->run(
          Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
