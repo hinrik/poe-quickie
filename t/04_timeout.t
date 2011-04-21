@@ -19,12 +19,12 @@ sub _start {
     my $heap = $_[HEAP];
 
     $heap->{quickie} = POE::Quickie->new();
+    $heap->{start} = time;
     $heap->{quickie}->run(
         Program   => sub { sleep 10 },
         ExitEvent => 'exit',
         Timeout   => 3,
     );
-    $heap->{start} = time;
 }
 
 sub exit {

@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Try to avoid a timing-related failure in the 04_timeout.t test
 
 0.12  Sat Sep 25 07:57:23 GMT 2010
     - Made the docs more readable and added more links
