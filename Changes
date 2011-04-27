@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.13  Wed Apr 27 07:49:39 GMT 2011
     - Try to avoid a timing-related failure in the 04_timeout.t test
     - Deliver StdoutEvent/StderrEvent/ExitEvent synchronously
 
