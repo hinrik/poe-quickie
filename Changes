@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Add a warning to the Pod about using the convenience functions in
+      synchronous event handlers.
 
 0.13  Wed Apr 27 07:49:39 GMT 2011
     - Try to avoid a timing-related failure in the 04_timeout.t test

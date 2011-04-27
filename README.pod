@@ -172,6 +172,11 @@ called in the meantime, so the rest of your application will continue to run.
 They all take the same arguments as the L<C<run>|/run> method, except for the
 B<'*Event'> and B<'Context'> arguments.
 
+B<Note:> Since these functions block, you must be careful not to call them in
+event handlers which were executed with C<< $poe_kernel->call() >> by other
+sessions, so you don't hold them up. A simple way to avoid that is to
+C<yield()> or C<post()> a new event to your session and do it from there.
+
 =head2 C<quickie>
 
 Returns 3 values: the stdout, stderr, and exit code (L<C<$?>|perlvar>) of the
