@@ -181,7 +181,7 @@ sub _child_signal {
     delete $self->{wheels}{$id};
 
     if (defined $event) {
-        $kernel->post(
+        $kernel->call(
             $self->{parent_id},
             $event,
             $status,
@@ -227,7 +227,7 @@ sub _child_stdout {
     }
     elsif (defined (my $event = $self->{wheels}{$id}{args}{StdoutEvent})) {
         my $context = $self->{wheels}{$id}{args}{Context};
-        $kernel->post(
+        $kernel->call(
             $self->{parent_id},
             $event,
             $output,
@@ -263,7 +263,7 @@ sub _child_stderr {
     }
     elsif (defined (my $event = $self->{wheels}{$id}{args}{StderrEvent})) {
         my $context = $self->{wheels}{$id}{args}{Context};
-        $kernel->post(
+        $kernel->call(
             $self->{parent_id},
             $event,
             $error,
