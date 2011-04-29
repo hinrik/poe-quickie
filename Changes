@@ -3,6 +3,8 @@ Revision history for POE-Quickie
 {{$NEXT}}
     - Add a warning to the Pod about using the convenience functions in
       synchronous event handlers.
+    - Add a ResultEvent to combine the best features of quickie() and run()
+    - Add a quickie_run() function as a shorthand for POE::Quickie->run()
 
 0.13  Wed Apr 27 07:49:39 GMT 2011
     - Try to avoid a timing-related failure in the 04_timeout.t test
