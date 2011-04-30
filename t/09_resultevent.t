@@ -2,7 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 use POE;
 use POE::Quickie;
-use Test::More tests => 7;
+use Test::More tests => 6;
 
 POE::Session->create(
     package_states => [
@@ -20,8 +20,8 @@ sub _start {
         ResultEvent => 'result',
         Context     => { a => 'b' },
         Program     => sub {
-            print STDOUT "FOO\n";
             print STDERR "BAR\n";
+            print STDOUT "FOO\n";
         },
     );
 }
@@ -31,10 +31,9 @@ sub result {
         = @_[HEAP, ARG0..$#_];
 
     is($pid, $heap->{pid}, 'Correct pid');
-    is($stdout, "FOO\n", 'Got stdout');
-    is($stderr, "BAR\n", 'Got stderr');
-    like($merged, qr/FOO\n/m, 'Got merged stdout');
-    like($merged, qr/FOO\n/m, 'Got merged stderr');
+    is_deeply($stdout, ['FOO'],, 'Got stdout');
+    is_deeply($stderr, ['BAR'], 'Got stderr');
+    is_deeply($merged, ['BAR', 'FOO'], 'Got merged output');
     is(($status >> 8), 0, 'Correct exit status');
     is($context->{a}, 'b', 'Correct context');
 }

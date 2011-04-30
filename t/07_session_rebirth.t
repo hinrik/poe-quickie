@@ -19,7 +19,7 @@ POE::Kernel->run;
 
 sub _start {
     my ($stdout) = quickie(sub { print "foo\n" });
-    is($stdout, "foo\n", 'Got stdout');
+    is_deeply($stdout, ['foo'], 'Got stdout');
     $_[KERNEL]->yield('_one');
 }
 
@@ -33,5 +33,5 @@ sub _two {
 
 sub _three {
     my ($stdout) = quickie(sub { print "bar\n" });
-    is($stdout, "bar\n", 'Got stdout');
+    is_deeply($stdout, ['bar'], 'Got stdout');
 }
