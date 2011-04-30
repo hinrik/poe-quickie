@@ -123,9 +123,9 @@ must be a string) as the code argument (L<I<-e>|perlrun>), and the current
 L<C<@INC>|perlvar> passed as include arguments (L<I<-I>|perlrun>). Default
 is false.
 
-B<'WheelArgs'> (optional), a hash reference of options which will be passed
-verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
-useful if you want to change the input/output filters and such.
+All other arguments will be passed to POE::Wheel::Run's
+L<C<new>|POE::Wheel::Run/new> method. Useful if you want to change the
+input/output filters and such.
 
 =head2 C<killall>
 

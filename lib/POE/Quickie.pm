@@ -138,7 +138,6 @@ sub _create_wheel {
 
     $self->{wheels}{$wheel->ID}{obj} = $wheel;
     $self->{wheels}{$wheel->ID}{args} = $args;
-    $self->{wheels}{$wheel->ID}{alive} = 2;
 
     if (defined $args->{Input}) {
         $wheel->put($args->{Input});
