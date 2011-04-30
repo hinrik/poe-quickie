@@ -3,7 +3,6 @@ use warnings FATAL => 'all';
 use POE;
 use POE::Quickie;
 use Test::More tests => 7;
-use Capture::Tiny qw(capture);
 
 POE::Session->create(
     package_states => [
