@@ -5,6 +5,8 @@ Revision history for POE-Quickie
       order of importance
     - Events/functions which return the complete stdout/stderr will now
       return arrays instead of strings so it works with non-linebased output.
+    - Eliminate the 'WheelArgs' parameter. Instead, any extra arguments will
+      be passed to POE::Wheel::Run.
 
 0.14  Fri Apr 29 03:17:16 GMT 2011
     - Add a warning to the Pod about using the convenience functions in

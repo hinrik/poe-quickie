@@ -3,6 +3,7 @@ use warnings FATAL => 'all';
 use POE;
 use POE::Quickie;
 use Test::More tests => 8;
+use Test::Deep;
 use Capture::Tiny qw(capture);
 
 POE::Session->create(
@@ -20,13 +21,14 @@ sub _start {
 
     my $before = time;
     my ($stdout, $stderr, $status) = quickie(sub { sleep 3; print "foo\n" });
+    my $after = time;
     is(($status >> 8), 0, 'Correct exit status');
     is_deeply($stdout, ['foo'], 'Got stdout');
-    my $after = time;
     cmp_ok($after - $before, '>=', 2, 'The program runs');
 
     my ($merged) = quickie_merged(sub { warn "foo\n"; print "bar\n" });
-    is_deeply($merged, ['foo', 'bar'], 'Got merged output');
+    ok(eq_deeply($merged, [qw(foo bar)]) || eq_deeply($merged, [qw(bar foo)]),
+        'Got merged output');
 
     ($stdout, $stderr) = capture {
         quickie_tee(sub { print "stdout\n"; warn "stderr\n"});
@@ -40,6 +42,7 @@ sub _start {
         quickie_tee_merged(sub { warn "stderr\n"; print "stdout\n" });
     };
 
-    is($stdout, "stderr\nstdout\n", 'Got tee merged stdout');
+    ok($stdout eq "stderr\nstdout\n" || $stdout eq "stdout\nstderr\n",
+        'Got tee merged stdout');
     is($stderr, '', 'Got tee merged stderr');
 }

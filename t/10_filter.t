@@ -4,7 +4,6 @@ use POE;
 use POE::Filter::Reference;
 use POE::Quickie;
 use Test::More tests => 1;
-            use Data::Dumper;
 
 POE::Session->create(
     package_states => [
@@ -20,12 +19,10 @@ POE::Kernel->run;
 sub _start {
     $_[HEAP]{pid} = quickie_run(
         ResultEvent  => 'result',
+        StdoutFilter => POE::Filter::Reference->new(),
         Program      => sub {
             my $filter = POE::Filter::Reference->new();
             print $filter->put([{ a => 'b' }])->[0];
-        },
-        WheelArgs => {
-            StdoutFilter => POE::Filter::Reference->new(),
         },
     );
 }

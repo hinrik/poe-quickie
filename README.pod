@@ -124,7 +124,7 @@ L<C<@INC>|perlvar> passed as include arguments (L<I<-I>|perlrun>). Default
 is false.
 
 All other arguments will be passed to POE::Wheel::Run's
-L<C<new>|POE::Wheel::Run/new> method. Useful if you want to change the
+L<C<new>|POE::Wheel::Run/new> method. Useful if you want to specify the
 input/output filters and such.
 
 =head2 C<killall>

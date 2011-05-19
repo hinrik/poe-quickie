@@ -95,17 +95,22 @@ sub run {
     # propagate possible exception from POE::Wheel::Run->new()
     croak $exception if $exception;
 
-    $self->{lazy}{$wheel->PID} = { } if defined $args{ResultEvent};
     return $wheel->PID;
 }
 
 sub _create_wheel {
     my ($kernel, $self, $args) = @_[KERNEL, OBJECT, ARG0];
 
-    my $program = $args->{Program};
-    if ($args->{AltFork}) {
+    my %data;
+    for my $arg (qw(AltFork Timeout Input Program Context ProgramArgs
+            StdoutEvent StderrEvent ExitEvent ResultEvent Tee Merged)) {
+        next if !exists $args->{$arg};
+        $data{$arg} = delete $args->{$arg};
+    }
+
+    if ($data{AltFork}) {
         my @inc = map { +'-I' => $_ } @INC;
-        $program = [$^X, @inc, '-e', $program];
+        $data{Program} = [$^X, @inc, '-e', $data{Program}];
     }
 
     my $wheel;
@@ -115,19 +120,16 @@ sub _create_wheel {
             StdinEvent  => '_child_stdin',
             StdoutEvent => '_child_stdout',
             StderrEvent => '_child_stderr',
-            Program     => $program,
-            (defined $args->{ProgramArgs}
-                ? (ProgramArgs => $args->{ProgramArgs})
+            Program     => $data{Program},
+            (defined $data{ProgramArgs}
+                ? (ProgramArgs => $data{ProgramArgs})
                 : ()
             ),
             ($^O ne 'Win32'
                 ? (CloseOnCall => 1)
                 : ()
             ),
-            (defined $args->{WheelArgs}
-                ? (%{ $args->{WheelArgs} })
-                : ()
-            ),
+            %$args,
         );
     };
 
@@ -136,16 +138,15 @@ sub _create_wheel {
         return $@;
     }
 
-    $self->{wheels}{$wheel->ID}{obj} = $wheel;
-    $self->{wheels}{$wheel->ID}{args} = $args;
+    $data{obj} = $wheel;
+    $data{extra_args} = $args;
+    $self->{wheels}{$wheel->ID} = \%data;
 
-    if (defined $args->{Input}) {
-        $wheel->put($args->{Input});
-    }
+    $wheel->put($data{Input}) if defined $data{Input};
 
-    if (defined $args->{Timeout}) {
-        $self->{wheels}{$wheel->ID}{alrm}
-            = $kernel->delay_set('_child_timeout', $args->{Timeout}, $wheel->ID);
+    if ($data{Timeout}) {
+        $data{alrm} =
+            $kernel->delay_set('_child_timeout', $data{Timeout}, $wheel->ID);
     }
 
     $kernel->sig_child($wheel->PID, '_child_signal');
@@ -167,54 +168,51 @@ sub _child_signal {
     my $id = $self->_pid_to_id($pid);
 
     my $data = $self->{wheels}{$id};
-    $data->{status} = $status;
 
     my $s = $status >> 8;
-    if ($s != 0 && !exists $data->{args}{ExitEvent}
+    if ($s != 0 && !exists $data->{ExitEvent}
             && !exists $data->{ResultEvent}) {
         warn "Child $pid exited with nonzero status $s\n";
     }
 
-    $kernel->alarm_remove($data->{alrm});
+    $kernel->alarm_remove($data->{alrm}) if $data->{Timeout};
+    if ($data->{lazy}) {
+        $self->{lazy}{$id} = {
+            merged => $data->{merged},
+            stdout => $data->{stdout},
+            stderr => $data->{stderr},
+            status => $status,
+        }
+    }
+    delete $self->{wheels}{$id};
 
-    if (defined $data->{args}{ExitEvent}) {
+    if (defined $data->{ExitEvent}) {
         $kernel->call(
             $self->{parent_id},
-            $data->{args}{ExitEvent},
+            $data->{ExitEvent},
             $status,
             $pid,
-            (defined $data->{args}{Context}
-                ? $data->{args}{Context}
+            (defined $data->{Context}
+                ? $data->{Context}
                 : ()),
         );
     }
 
-    if ($self->{lazy}{$pid}) {
-        $self->{lazy}{$pid}{results} = [
-            $self->{lazy}{$pid}{stdout},
-            $self->{lazy}{$pid}{stderr},
-            $self->{lazy}{$pid}{merged},
-            $self->{wheels}{$id}{status},
-        ];
-
+    if (defined $data->{ResultEvent}) {
+        $kernel->call(
+            $self->{parent_id},
+            $data->{ResultEvent},
+            $pid,
+            $data->{stdout},
+            $data->{stderr},
+            $data->{merged},
+            $status,
+            (defined $data->{Context}
+                ? $data->{Context}
+                : ()),
+        );
     }
-    delete $self->{wheels}{$id};
-    return if !defined $data->{args}{ResultEvent};
 
-    my ($stdout, $stderr, $merged) = @{ $self->{lazy}{$pid}{results} };
-    delete $self->{lazy}{$pid};
-    $kernel->call(
-        $self->{parent_id},
-        $data->{args}{ResultEvent},
-        $pid,
-        $stdout,
-        $stderr,
-        $merged,
-        $status,
-        (defined $data->{args}{Context}
-            ? $data->{args}{Context}
-            : ()),
-    );
     return;
 }
 
@@ -233,26 +231,26 @@ sub _child_stdin {
 sub _child_stdout {
     my ($kernel, $self, $output, $id) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
-    my $pid = $self->{wheels}{$id}{obj}->PID;
+    my $data = $self->{wheels}{$id};
 
-    if ($self->{lazy}{$pid}) {
-        push @{ $self->{lazy}{$pid}{merged} }, $output;
-        push @{ $self->{lazy}{$pid}{stdout} }, $output;
+    if ($data->{lazy} || defined $data->{ResultEvent}) {
+        push @{ $data->{merged} }, $output;
+        push @{ $data->{stdout} }, $output;
 
-        if ($self->{lazy}{$pid}{Tee}) {
+        if ($data->{lazy}{Tee}) {
             print $output, "\n";
         }
     }
-    elsif (!exists $self->{wheels}{$id}{args}{StdoutEvent}) {
+    elsif (!exists $data->{StdoutEvent}) {
         print "$output\n";
     }
-    elsif (defined (my $event = $self->{wheels}{$id}{args}{StdoutEvent})) {
-        my $context = $self->{wheels}{$id}{args}{Context};
+    elsif (defined (my $event = $data->{StdoutEvent})) {
+        my $context = $data->{Context};
         $kernel->call(
             $self->{parent_id},
             $event,
             $output,
-            $pid,
+            $data->{obj}->PID,
             (defined $context ? $context : ()),
         );
     }
@@ -263,28 +261,28 @@ sub _child_stdout {
 sub _child_stderr {
     my ($kernel, $self, $error, $id) = @_[KERNEL, OBJECT, ARG0, ARG1];
 
-    my $pid = $self->{wheels}{$id}{obj}->PID;
+    my $data = $self->{wheels}{$id};
 
-    if ($self->{lazy}{$pid}) {
-        push @{ $self->{lazy}{$pid}{merged} }, $error;
-        push @{ $self->{lazy}{$pid}{stderr} }, $error;
+    if ($data->{lazy} || defined $data->{ResultEvent}) {
+        push @{ $data->{merged} }, $error;
+        push @{ $data->{stderr} }, $error;
 
-        if ($self->{lazy}{$pid}{Tee}) {
-            $self->{lazy}{$pid}{Merged}
+        if ($data->{lazy}{Tee}) {
+            $data->{lazy}{Merged}
                 ? print $error, "\n"
                 : warn $error, "\n";
         }
     }
-    elsif (!exists $self->{wheels}{$id}{args}{StderrEvent}) {
+    elsif (!exists $data->{StderrEvent}) {
         warn "$error\n";
     }
-    elsif (defined (my $event = $self->{wheels}{$id}{args}{StderrEvent})) {
-        my $context = $self->{wheels}{$id}{args}{Context};
+    elsif (defined (my $event = $data->{StderrEvent})) {
+        my $context = $data->{Context};
         $kernel->call(
             $self->{parent_id},
             $event,
             $error,
-            $pid,
+            $data->{obj}->PID,
             (defined $context ? $context : ()),
         );
     }
@@ -328,7 +326,7 @@ sub processes {
     my %wheels;
     for my $id (keys %{ $self->{wheels} }) {
         my $pid = $self->{wheels}{$id}{obj}->PID;
-        $wheels{$pid} = $self->{wheels}{$id}{args}{Context};
+        $wheels{$pid} = $self->{wheels}{$id}{Context};
     }
 
     return \%wheels;
@@ -354,20 +352,19 @@ sub _lazy_run {
     );
 
     my $id = $self->_pid_to_id($pid);
-    $self->{lazy}{$pid} = { %args };
+    $self->{wheels}{$id}{lazy} = {
+        Tee    => $args{Tee},
+        Merged => $args{Merged},
+    };
 
     my $parent_id = $poe_kernel->get_active_session->ID;
     $poe_kernel->refcount_increment($parent_id, __PACKAGE__);
-    $poe_kernel->refcount_increment($self->{session_id}, __PACKAGE__);
     $poe_kernel->run_one_timeslice() while $self->{wheels}{$id};
     $poe_kernel->refcount_decrement($parent_id, __PACKAGE__);
-    $poe_kernel->refcount_decrement($self->{session_id}, __PACKAGE__);
 
-    my ($stdout, $stderr, $merged, $status) = @{ $self->{lazy}{$pid}{results} };
-    delete $self->{lazy}{$pid};
-
-    return $merged, $status if $args{Merged};
-    return $stdout, $stderr, $status;
+    my $data = delete $self->{lazy}{$id};
+    return $data->{merged}, $data->{status} if $args{Merged};
+    return $data->{stdout}, $data->{stderr}, $data->{status};
 }
 
 sub quickie_run {
@@ -542,9 +539,9 @@ must be a string) as the code argument (L<I<-e>|perlrun>), and the current
 L<C<@INC>|perlvar> passed as include arguments (L<I<-I>|perlrun>). Default
 is false.
 
-B<'WheelArgs'> (optional), a hash reference of options which will be passed
-verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
-useful if you want to change the input/output filters and such.
+All other arguments will be passed to POE::Wheel::Run's
+L<C<new>|POE::Wheel::Run/new> method. Useful if you want to specify the
+input/output filters and such.
 
 =head2 C<killall>
 
