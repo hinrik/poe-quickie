@@ -142,7 +142,12 @@ sub _create_wheel {
     $data{extra_args} = $args;
     $self->{wheels}{$wheel->ID} = \%data;
 
-    $wheel->put($data{Input}) if defined $data{Input};
+    if (defined $data{Input}) {
+        $wheel->put($data{Input});
+    }
+    else {
+        $wheel->shutdown_stdin();
+    }
 
     if ($data{Timeout}) {
         $data{alrm} =
