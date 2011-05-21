@@ -1,6 +1,7 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+    - Add missing dependency on Test::Deep
 
 0.15  Thu May 19 16:14:53 GMT 2011
     - Change the order of arguments to ResultEvent to fit my sense of their
