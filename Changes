@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.17  Wed May 25 05:44:37 GMT 2011
     - Fix another error in t/09_resultevent.t which was causing failures
 
 0.16  Sat May 21 01:16:52 GMT 2011
