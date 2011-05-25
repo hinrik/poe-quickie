@@ -32,10 +32,10 @@ sub result {
         = @_[HEAP, ARG0..$#_];
 
     is($pid, $heap->{pid}, 'Correct pid');
-    is_deeply($stdout, ['FOO'],, 'Got stdout');
+    is_deeply($stdout, ['FOO'], 'Got stdout');
     is_deeply($stderr, ['BAR'], 'Got stderr');
     ok(eq_deeply($merged, ['BAR', 'FOO'])
-        || eq_deeply($merged, ['BAR', 'FOO']), 'Got merged output');
+        || eq_deeply($merged, ['FOO', 'BAR']), 'Got merged output');
     is(($status >> 8), 0, 'Correct exit status');
     is($context->{a}, 'b', 'Correct context');
 }
