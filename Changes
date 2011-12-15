@@ -1,6 +1,8 @@
 Revision history for POE-Quickie
 
 {{$NEXT}}
+
+0.18  Thu Dec 15 21:57:10 GMT 2011
     - Depend on POE 1.350. In previous versions, sig_child would not be
       delivered in some cases, causing a test failure.
 
