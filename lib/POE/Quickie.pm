@@ -599,6 +599,8 @@ to the options to L<C<run>|/run>.
 
 =item C<ARG2>: the context variable, if any
 
+=back
+
 =head2 ResultEvent
 
 =over 4
@@ -614,8 +616,6 @@ to the options to L<C<run>|/run>.
 =item C<ARG4>: the exit code (L<C<$?>|perlvar>) of the child process
 
 =item C<ARG5>: the context variable, if any
-
-=back
 
 =back
 
