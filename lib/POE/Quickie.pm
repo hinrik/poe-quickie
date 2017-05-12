@@ -83,8 +83,8 @@ sub run {
         croak 'Program must be a string when AltFork is enabled';
     }
 
-    if ($args{AltFork} && $^O eq 'Win32') {
-        croak 'AltFork does not currently work on Win32';
+    if ($args{AltFork} && $^O eq 'MSWin32') {
+        croak 'AltFork does not currently work on MSWin32';
     }
 
     $self->_create_session() if !defined $self->{session_id};
@@ -125,7 +125,7 @@ sub _create_wheel {
                 ? (ProgramArgs => $data{ProgramArgs})
                 : ()
             ),
-            ($^O ne 'Win32'
+            ($^O ne 'MSWin32'
                 ? (CloseOnCall => 1)
                 : ()
             ),
